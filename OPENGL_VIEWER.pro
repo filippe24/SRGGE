@@ -39,16 +39,16 @@ HEADERS +=	MainWindow.h		\
                 Helpers/triangle_mesh.h \
                 FRR/Viewer1.h \
                 Helpers/mesh_importer.h \
-    Helpers/shader.h \
-    FRR/ssao_viewer.h \
-    FRR/separable.h \
-    SRGGE/ex1.h \
-    SRGGE/ex2.h \
-    Helpers/octree.h \
-    SRGGE/ex3.h \
-    SRGGE/ex4.h \
-    SRGGE/ex5.h \
-    SRGGE/ex6.h
+                Helpers/shader.h \
+                FRR/ssao_viewer.h \
+                FRR/separable.h \
+                SRGGE/ex1.h \
+                SRGGE/ex2.h \
+                Helpers/octree.h \
+                SRGGE/ex3.h \
+                SRGGE/ex4.h \
+                SRGGE/ex5.h \
+                SRGGE/ex6.h
 		
 SOURCES +=	main.cpp		\ 
 		MainWindow.cpp 		\
@@ -59,15 +59,15 @@ SOURCES +=	main.cpp		\
                 Helpers/triangle_mesh.cc \
                 FRR/Viewer1.cpp \
                 Helpers/mesh_importer.cpp \
-    FRR/ssao_viewer.cpp \
-    FRR/separable.cpp \
-    SRGGE/ex1.cpp \
-    SRGGE/ex2.cpp \
-    Helpers/octree.cpp \
-    SRGGE/ex3.cpp \
-    SRGGE/ex4.cpp \
-    SRGGE/ex5.cpp \
-    SRGGE/ex6.cpp
+                FRR/ssao_viewer.cpp \
+                FRR/separable.cpp \
+                SRGGE/ex1.cpp \
+                SRGGE/ex2.cpp \
+                Helpers/octree.cpp \
+                SRGGE/ex3.cpp \
+                SRGGE/ex4.cpp \
+                SRGGE/ex5.cpp \
+                SRGGE/ex6.cpp
 
 
 DISTFILES += \

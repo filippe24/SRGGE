@@ -5,8 +5,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "time.h"
 
-int final_time3, initial_time3=time(NULL), frames3=0;
-
 
 ex1::ex1(const QGLFormat &glf, QWidget *parent) : Viewer1(glf, parent)
 {
@@ -134,13 +132,13 @@ void ex1::paintGL()
 
     //Set Framerate
 
-    frames3++;
-    final_time3=time(NULL);
-    if(final_time3-initial_time3>0)
+    frames++;
+    final_time=time(NULL);
+    if(final_time-initial_time>0)
     {
-        emit SetFramerate(QString::number(frames3/(final_time3-initial_time3)));
-        frames3=0;
-        initial_time3=final_time3;
+        emit SetFramerate(QString::number(frames/(final_time-initial_time)));
+        frames=0;
+        initial_time=final_time;
     }
 
 

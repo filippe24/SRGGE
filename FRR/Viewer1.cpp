@@ -267,13 +267,20 @@ void Viewer1::importModel()
 
 }
 
-void Viewer1::exportModel(){
+void Viewer1::exportModel()
+{
     QString filename;
 
     filename = QFileDialog::getSaveFileName(this, "Save file",tr("PLY Files (*.ply)"));
 
     if(filename.isNull())
         filename = "untitled";
+    else
+    {
+        if(!mesh_importer.ExportModel(filename))
+            QMessageBox::warning(this, tr("Error"),
+                            tr("The file could not be written"));
+    }
 }
 
 

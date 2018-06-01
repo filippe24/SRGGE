@@ -35,6 +35,8 @@ public:
 
     QLabel          *print_fps;
 
+    int final_time, initial_time=time(NULL), frames=0;
+
     GLuint gShaderID;
 
     typedef void (APIENTRY *_glGenVertexArrays) (GLsizei, GLuint*);

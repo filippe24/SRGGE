@@ -11,9 +11,6 @@
 
 
 
-
-int final_time6, initial_time6=time(NULL), frames6=0;
-
 namespace data_representation {
 
 namespace {
@@ -209,13 +206,13 @@ void ex3::paintGL()
     }
 
 //    Set Framerate
-    frames6++;
-    final_time6=time(NULL);
-    if(final_time6-initial_time6>0)
+    frames++;
+    final_time=time(NULL);
+    if(final_time-initial_time>0)
     {
-        emit SetFramerate(QString::number(frames6/(final_time6-initial_time6)));
-        frames6=0;
-        initial_time6=final_time6;
+        emit SetFramerate(QString::number(frames/(final_time-initial_time)));
+        frames=0;
+        initial_time=final_time;
     }
 
 

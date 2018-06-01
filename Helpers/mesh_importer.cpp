@@ -67,3 +67,15 @@ bool MI::LoadModel(QString filename) {
 
   return false;
 }
+
+bool MI::ExportModel(QString filename)
+{
+    std::string file = filename.toUtf8().constData();
+
+    bool res = false;
+
+    res = data_representation::WriteToPly(file, m_hw->mesh_.get());
+
+    return res;
+
+}

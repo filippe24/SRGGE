@@ -10,9 +10,6 @@
 
 
 
-
-int final_time4, initial_time4=time(NULL), frames4=0;
-
 namespace data_representation {
 
 namespace {
@@ -94,7 +91,6 @@ ex2::ex2(const QGLFormat &glf, QWidget *parent) : ex1(glf, parent)
     setFocusPolicy(Qt::StrongFocus);
 }
 
-
 void ex2::initializeGL()
 {
 
@@ -122,8 +118,6 @@ void ex2::initializeGL()
     glColor3f   (1.0, 1.0, 0.0);		// set foreground color
 
 }
-
-
 
 void ex2::paintGL()
 {
@@ -208,20 +202,18 @@ void ex2::paintGL()
     }
 
 //    Set Framerate
-    frames4++;
-    final_time4=time(NULL);
-    if(final_time4-initial_time4>0)
+    frames++;
+    final_time=time(NULL);
+    if(final_time-initial_time>0)
     {
-        emit SetFramerate(QString::number(frames4/(final_time4-initial_time4)));
-        frames4=0;
-        initial_time4=final_time4;
+        emit SetFramerate(QString::number(frames/(final_time-initial_time)));
+        frames=0;
+        initial_time=final_time;
     }
 
 
 
 }
-
-
 
 void ex2::vertexClustering()
 {
@@ -350,10 +342,6 @@ void ex2::vertexClustering()
 
 }
 
-
-
-
-
 void ex2::octreeVertexClustering()
 {
 
@@ -459,6 +447,8 @@ void ex2::octreeVertexClustering()
 
         data_representation::ComputeVertexNormals(new_vertices,new_faces,&new_normals);
 
+        std::cout<<"numero vertici:"<< new_vertices.size()<<"  numero normals:"<<new_normals.size()<<"  numero faccie:"<<new_faces.size()<<std::endl;
+
     }
     else
     {
@@ -468,8 +458,6 @@ void ex2::octreeVertexClustering()
     }
 
 }
-
-
 
 void ex2::createOctree()
 {
@@ -493,14 +481,6 @@ void ex2::createOctree()
     createdOctree = true;
 
 }
-
-
-
-
-
-
-
-
 
 void ex2::initVertexBuffer()
 {
@@ -595,11 +575,10 @@ QGroupBox* ex2::controlPanel()
     QFrame* line = new QFrame();
     line->setFrameShape(QFrame::HLine);
 
-    //Unable LOD
-    QButtonGroup *buttonGroup = new QButtonGroup;
-
     QPushButton *buttonOctree = new QPushButton("Create Octree");
 
+    //Unable LOD
+    QButtonGroup *buttonGroup = new QButtonGroup;
     QRadioButton *OnNormal = new QRadioButton("Normal");
     QRadioButton *OnBasic = new QRadioButton("Vertex clustering");
     QRadioButton *OnOctree = new QRadioButton("Octree LOD");
@@ -613,13 +592,17 @@ QGroupBox* ex2::controlPanel()
     QLabel *title_lod = new QLabel("<b>LOD</b>");
     QLabel *select_level = new QLabel("Select level:");
 
-
+    QSpinBox *in_val = new QSpinBox(this);
+    in_val->setMinimum(2);
+    in_val->setMaximum(100);
+    in_val->setSingleStep(1);
+    in_val->setValue(2);
 
     QSlider *num_div = new QSlider(Qt::Horizontal);
     num_div -> setMinimum(2);
     num_div -> setMaximum(100);
     num_div -> setValue(2);
-    num_div -> setTickInterval(5);
+    num_div -> setTickInterval(1);
     num_div -> setTickPosition(QSlider::TicksBelow);
 
     //LOD counters
@@ -631,6 +614,9 @@ QGroupBox* ex2::controlPanel()
 
     auto layout = dynamic_cast<QGridLayout*>(groupBox->layout());
     int row = layout->rowCount() + 1;
+
+    connect(in_val, SIGNAL(valueChanged(int)),num_div,SLOT(setValue(int)) );
+    connect(num_div,SIGNAL(valueChanged(int)),in_val,SLOT(setValue(int)) );
 
     connect(num_div, SIGNAL(valueChanged(int)),this,SLOT(setNumberlod(int)));
     connect(OnNormal,SIGNAL(toggled(bool)),this,SLOT(setOFF()));
@@ -663,6 +649,8 @@ QGroupBox* ex2::controlPanel()
     layout->addWidget(select_level,row,0);
     row++;
     layout->addWidget(num_div,row,0,1,2);
+    row++;
+    layout->addWidget(in_val,row,0,1,2);
 
     row++;
     layout->addWidget(title_v,row,0);

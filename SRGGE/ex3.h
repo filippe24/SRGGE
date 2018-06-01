@@ -1,5 +1,5 @@
-#ifndef EX3_H
-#define EX3_H
+#ifndef ex3_H
+#define ex3_H
 
 
 #include <QtWidgets>

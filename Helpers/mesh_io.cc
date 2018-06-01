@@ -182,17 +182,55 @@ bool ReadFromPly(const std::string &filename, TriangleMesh *mesh) {
   return true;
 }
 
-bool WriteToPly(const std::string &filename, const TriangleMesh &mesh) {
+bool WriteToPly(const std::string &filename, const TriangleMesh *mesh) {
   (void)filename;
   (void)mesh;
 
-  std::cerr << "Not yet implemented" << std::endl;
+    std::ofstream outFile( filename.c_str());
 
-  // TODO: Implement storing to PLY format.
+    if( !outFile )
+    {
+        std::cerr<< "error opening output file" << filename << std::endl;
+        return false;
+    }
 
-  // END.
+    const int pointNum = (int) (mesh->vertices_.size())/3;
+    const int triangleNum = (int) (mesh->faces_.size())/3;
 
-  return false;
+    outFile << "ply" << std::endl;
+    outFile << "format ascii 1.0" << std::endl;
+    outFile << "element vertex " << pointNum << std::endl;
+    outFile << "property float x" << std::endl;
+    outFile << "property float y" << std::endl;
+    outFile << "property float z" << std::endl;
+    outFile << "element face " << triangleNum << std::endl;
+    outFile << "property list uchar int vertex_index" << std::endl;
+    outFile << "end_header" << std::endl;
+
+    //points
+
+    for ( int p = 0; p < pointNum; ++p )
+    {
+        outFile << mesh->vertices_[3*p + 0]<< " ";
+        outFile << mesh->vertices_[3*p + 1]<< " ";
+        outFile << mesh->vertices_[3*p + 2];
+        outFile << std::endl;
+    }
+
+    //faces
+    for ( int f = 0; f < triangleNum; ++f )
+    {
+        outFile << "3 ";
+        outFile << mesh->faces_[3*f + 0] << " ";
+        outFile << mesh->faces_[3*f + 1] << " ";
+        outFile << mesh->faces_[3*f + 2];
+
+        outFile << std::endl;
+    }
+
+    return true;
+
+
 }
 
 }  // namespace data_representation
