@@ -113,7 +113,7 @@ void ex4::paintGL()
                 else if(world[i][j] == 2)
                     glUniform3f( color_location, 0.7,0.0,0.0);
                 else
-                    glUniform3f( color_location, 0.3,0.0,0.0);
+                    glUniform3f( color_location, 0.3,0.3,0.0);
 
                 glBindVertexArray(vaoG);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexG);
@@ -149,12 +149,30 @@ void ex4::paintGL()
 
                 }
 
-                if(world[i][j]== 3 && (mesh_ != nullptr))
+                if(world[i][j]== 3 && (mesh1 != nullptr))
                 {
+
+
+                    //serve un'altra translazione per mettere i conigli al centro della tile!!
+
+
+
+                    float sf = scalingFactor;
+                    Eigen::Matrix4f S;
+                    S << sf, 0 , 0 , 0,
+                         0 , sf, 0 , 0,
+                         0 , 0 , sf, 0,
+                         0 , 0 , 0 , 1;
+
+                    Eigen::Matrix4f scaledModel = model*S;
+                    GLuint scaled_model_location = glGetUniformLocation(gShaderID,"u_model");
+                    glUniformMatrix4fv(scaled_model_location, 1, GL_FALSE, scaledModel.data());
+
+
                     //RENDER MODEL
                     glBindVertexArray(vao);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
-                    glDrawElements(GL_TRIANGLES,mesh_->faces_.size(),GL_UNSIGNED_INT,0);
+                    glDrawElements(GL_TRIANGLES,mesh1->faces_.size(),GL_UNSIGNED_INT,0);
                     glBindVertexArray(0);
 
                 }
@@ -189,8 +207,8 @@ void ex4::initializeWorld()
 
     worldDimension = 6;
     tileDimension = 3;
-    std::vector<int> column1 = {0,0,0,0,0,0};
-    std::vector<int> column2 = {0,1,1,0,0,0};
+    std::vector<int> column1 = {3,3,0,0,0,0};
+    std::vector<int> column2 = {3,1,1,0,0,0};
     std::vector<int> column3 = {0,1,1,0,0,0};
     std::vector<int> column4 = {0,2,1,1,3,0};
     std::vector<int> column5 = {0,0,0,1,3,0};
@@ -392,7 +410,7 @@ void ex4::initVertexBuffer()
     if(startPrinting)
     {
 
-        if (mesh_ != nullptr)
+        if (mesh1 != nullptr)
         {
             std::cout << "initVertexBuffer:mesh initilization" << std::endl;
 
@@ -405,18 +423,18 @@ void ex4::initVertexBuffer()
 
             //Vertex positions
             glBindBuffer(GL_ARRAY_BUFFER,vboVertex);
-            glBufferData(GL_ARRAY_BUFFER,mesh_->vertices_.size()* sizeof(GLfloat),&mesh_->vertices_[0],GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER,mesh1->vertices_.size()* sizeof(GLfloat),&mesh1->vertices_[0],GL_STATIC_DRAW);
             glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
             glEnableVertexAttribArray(0);
 
             //Vertex normals
             glBindBuffer(GL_ARRAY_BUFFER,vboNormal);
-            glBufferData(GL_ARRAY_BUFFER,mesh_->normals_.size() * sizeof(float),&mesh_->normals_[0],GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER,mesh1->normals_.size() * sizeof(float),&mesh1->normals_[0],GL_STATIC_DRAW);
             glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
             glEnableVertexAttribArray(1);
 
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER,mesh_->faces_.size()* sizeof(int),&mesh_->faces_[0],GL_STATIC_DRAW);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER,mesh1->faces_.size()* sizeof(int),&mesh1->faces_[0],GL_STATIC_DRAW);
 
             glBindVertexArray(0);
 
@@ -556,7 +574,7 @@ void ex4::startMuseum()
 {
     std::cout << "----> starting the application "<< std::endl;
     initializeWorld();
-//    uploadModel();
+    LoadModel(QString("/home/al/Downloads/bunny.ply"));
     startPrinting = true;
     initVertexBuffer();
     paintGL();
@@ -569,4 +587,44 @@ void ex4::setNumberCopies(int N)
 }
 
 
+bool ex4::LoadModel(QString filename) {
+  std::string file = filename.toUtf8().constData();
+  uint pos = file.find_last_of(".");
+  std::string type = file.substr(pos + 1);
 
+  mesh1 = std::unique_ptr<data_representation::TriangleMesh>(new data_representation::TriangleMesh);
+
+  bool res = false;
+  if (type.compare("ply") == 0) {
+    res = data_representation::ReadFromPly(file, mesh1.get());
+  }
+
+  if (res) {
+
+        std::cout << "LoadModel : creata mesh con vertici:" << mesh1->vertices_.size() << " faccie:" << mesh1->faces_.size() << " normals:" <<mesh1->normals_.size() <<std::endl;
+
+        float x_dim_mesh = mesh1->max_[0] - mesh1->min_[0];
+        float z_dim_mesh = mesh1->max_[0] - mesh1->min_[0];
+        std::cout << "LoadModel : dimensione x:" << x_dim_mesh << " e y:"<< z_dim_mesh  <<std::endl;
+        float maxDim;
+        if(x_dim_mesh < z_dim_mesh)
+            maxDim = z_dim_mesh;
+        else
+            maxDim = x_dim_mesh;
+        scalingFactor = (tileDimension - (tileDimension/20))/maxDim;
+
+                     
+//      mesh1.reset(mesh1.release());
+//      camera_.UpdateModel(mesh1->min_, mesh1->max_);
+
+//      m_facesCount->setText(QString(std::to_string(m_hw->mesh1->faces_.size() / 3).c_str()));
+//      m_vertexCount->setText(QString(std::to_string(m_hw->mesh1->vertices_.size() / 3).c_str()));
+
+//      camera_.UpdateModel(mesh1->min_, mesh1->max_);
+
+//      initVertexBuffer();
+      return true;
+  }
+
+  return false;
+}

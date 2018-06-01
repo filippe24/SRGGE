@@ -27,7 +27,7 @@ public:
     void            initializeWorld();
     void            createGround();
     void            createWall();
-
+    bool            LoadModel(QString filename);
 
 
 
@@ -47,6 +47,9 @@ public:
     std::vector<float>      new_vertices;
     std::vector<int>        new_faces;
     std::vector<float>      new_normals;
+
+    std::unique_ptr<data_representation::TriangleMesh> mesh1;
+    float                   scalingFactor;
 
     GLuint vaoG, vaoW;
     GLuint vboVertexG, vboVertexW;
