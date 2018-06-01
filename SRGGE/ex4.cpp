@@ -20,14 +20,13 @@ void ex4::initializeGL()
     // initialize GL function resolution for current context
     initializeGLFunctions();
 
-    gShader = new Shader(QString("/home/al/Documents/Un/srgge/prj/SRGGE/shaders/try.vert"), QString("/home/al/Documents/Un/srgge/prj/SRGGE/shaders/try.frag"));
+    gShader = new Shader(QString("/home/al/Documents/Un/srgge/prj/SRGGE/shaders/try.vert"), QString("/home/al/Documents/Un/srgge/prj/SRGGE/shaders/try_color.frag"));
     gShader->m_program.bindAttributeLocation("vert", ATTRIB_VERTEX);
     gShader->m_program.bindAttributeLocation("normal" , ATTRIB_NORMAL);
     gShaderID = gShader -> getId();
 
     glGenVertexArrays = (_glGenVertexArrays) QGLWidget::context()->getProcAddress("glGenVertexArrays");
     glBindVertexArray = (_glBindVertexArray) QGLWidget::context()->getProcAddress("glBindVertexArray");
-
 
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
@@ -56,67 +55,8 @@ void ex4::paintGL()
     glClearColor(1.0f,1.0f,1.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (mesh_ != nullptr) {
-
-        std::cout << "paintGL:mesh painting" << std::endl;
-
-        camera_.SetViewport();
-
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glUseProgram(gShaderID);
-
-        Eigen::Matrix4f projection = camera_.SetProjection();
-        Eigen::Matrix4f view = camera_.SetView();
-        Eigen::Matrix4f model = camera_.SetModel();
-
-        Eigen::Matrix4f t = view * model;
-        Eigen::Matrix3f normal;
-        for (int i = 0; i < 3; ++i)
-          for (int j = 0; j < 3; ++j) normal(i, j) = t(i, j);
-
-        normal = normal.inverse().transpose();
-
-        float size=2*mesh_->max_[0];
-
-
-        for(int i =0; i<copies; i++){
-
-            for(int j=0; j<copies; j++){
-
-                //Translation
-                Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f((-copies/2*size)+2*size*float(i),0,(-copies/2*size)+2*size*float(j))));
-                Eigen::Matrix4f m = t.matrix();
-                model = model * m;
-
-                GLuint projection_location = glGetUniformLocation(gShaderID,"u_projection");
-                glUniformMatrix4fv(projection_location, 1, GL_FALSE, projection.data());
-                GLuint view_location = glGetUniformLocation(gShaderID,"u_view");
-                glUniformMatrix4fv(view_location, 1, GL_FALSE, view.data());
-                GLuint model_location = glGetUniformLocation(gShaderID,"u_model");
-                glUniformMatrix4fv(model_location, 1, GL_FALSE, model.data());
-                GLuint normal_matrix_location = glGetUniformLocation(gShaderID,"u_normal_matrix");
-                glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, normal.data());
-
-                //RENDER MODEL
-                glBindVertexArray(vao);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
-                glDrawElements(GL_TRIANGLES,mesh_->faces_.size(),GL_UNSIGNED_INT,0);
-                glBindVertexArray(0);
-
-                //Reset ModelView
-                model=camera_.SetModel();
-
-                }
-            }
-        glUseProgram(0);
-    }
-
     if(startPrinting)
     {
-        std::cout << "paintGL: painting world" << std::endl;
-
         camera_.SetViewport();
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -143,9 +83,14 @@ void ex4::paintGL()
 
                 //Translation
 //                Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f((-worldDimension/2*tileDimension)+2*tileDimension*float(i),0,(-worldDimension/2*tileDimension)+2*tileDimension*float(j))));
-                Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-tileDimension*float(i),0,-tileDimension*float(j))));
+                Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-tileDimension*float(i),-1,-tileDimension*float(j))));
                 Eigen::Matrix4f m = t.matrix();
                 model = model * m;
+
+                //Rotation matrix of 90 degree on y axes to create z-aligned wall :)
+                Eigen::Vector3f w = Eigen::Vector3f(0,1,0); // rotation axis
+                Eigen::Vector3f c = Eigen::Vector3f(0,0,0); // center of rotation
+                Eigen::Affine3f A = Eigen::Translation3f(c) * Eigen::AngleAxisf(0.5*M_PI, w) * Eigen::Translation3f(-c);
 
                 GLuint projection_location = glGetUniformLocation(gShaderID,"u_projection");
                 glUniformMatrix4fv(projection_location, 1, GL_FALSE, projection.data());
@@ -156,25 +101,64 @@ void ex4::paintGL()
                 GLuint normal_matrix_location = glGetUniformLocation(gShaderID,"u_normal_matrix");
                 glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, normal.data());
 
+                GLuint color_location = glGetUniformLocation(gShaderID,"in_color");
+                glUniform3f( color_location, 1.0,1.0,1.0);
+
+
                 //render ground
-                if(world[i][j] == 0)
+                if(world[i][j] ==  0)
+                    glUniform3f( color_location, 1.0,1.0,1.0);
+                else if(world[i][j] == 1)
+                    glUniform3f( color_location, 0.3,0.0,0.0);
+                else if(world[i][j] == 2)
+                    glUniform3f( color_location, 0.7,0.0,0.0);
+                else
+                    glUniform3f( color_location, 0.3,0.0,0.0);
+
+                glBindVertexArray(vaoG);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexG);
+                glDrawElements(GL_TRIANGLES,ground_faces.size(),GL_UNSIGNED_INT,0);
+                glBindVertexArray(0);
+
+
+                //render x-aligned wall
+                if((i != (worldDimension-1)) && (world[i][j] != world[i+1][j]) && (world[i][j] != 2) && (world[i+1][j] != 2))
                 {
-                    glBindVertexArray(vaoG);
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexG);
-                    glDrawElements(GL_TRIANGLES,ground_faces.size(),GL_UNSIGNED_INT,0);
+                    glUniform3f( color_location, 0.0,0.0,0.4);
+
+                    glBindVertexArray(vaoW);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
+                    glDrawElements(GL_TRIANGLES,wall_faces.size(),GL_UNSIGNED_INT,0);
                     glBindVertexArray(0);
 
-                    //render wall
-                    if((i != (worldDimension-1)) && (world[i][j] != world[i+1][j]))
-                    {
-                        std::cout << "sono qui"<<std::endl;
-                        glBindVertexArray(vaoW);
-                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
-                        glDrawElements(GL_TRIANGLES,wall_faces.size(),GL_UNSIGNED_INT,0);
-                        glBindVertexArray(0);
-
-                    }
                 }
+                //render z-aligned walls
+                if((j != (worldDimension-1)) && (world[i][j] != world[i][j+1]) && (world[i][j] != 2) && (world[i][j+1] != 2))
+                {
+                    //uploading the model matrix with 90 degree rotation
+                    Eigen::Matrix4f rotatedModel = model*A.matrix();
+                    GLuint rotated_model_location = glGetUniformLocation(gShaderID,"u_model");
+                    glUniformMatrix4fv(rotated_model_location, 1, GL_FALSE, rotatedModel.data());
+
+                    glUniform3f( color_location, 0.0,0.0,0.4);
+
+                    glBindVertexArray(vaoW);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
+                    glDrawElements(GL_TRIANGLES,wall_faces.size(),GL_UNSIGNED_INT,0);
+                    glBindVertexArray(0);
+
+                }
+
+                if(world[i][j]== 3 && (mesh_ != nullptr))
+                {
+                    //RENDER MODEL
+                    glBindVertexArray(vao);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
+                    glDrawElements(GL_TRIANGLES,mesh_->faces_.size(),GL_UNSIGNED_INT,0);
+                    glBindVertexArray(0);
+
+                }
+
 
                 //Reset ModelView
                 model=camera_.SetModel();
@@ -203,19 +187,26 @@ void ex4::paintGL()
 void ex4::initializeWorld()
 {
 
-    worldDimension = 3;
-    tileDimension = 2;
-    std::vector<int> column1 ={0,0,0};
-    std::vector<int> column2 ={0,1,0};
-    std::vector<int> column3 ={0,0,1};
+    worldDimension = 6;
+    tileDimension = 3;
+    std::vector<int> column1 = {0,0,0,0,0,0};
+    std::vector<int> column2 = {0,1,1,0,0,0};
+    std::vector<int> column3 = {0,1,1,0,0,0};
+    std::vector<int> column4 = {0,2,1,1,3,0};
+    std::vector<int> column5 = {0,0,0,1,3,0};
+    std::vector<int> column6 = {0,0,0,0,0,0};
 
     world.push_back(column1);
     world.push_back(column2);
     world.push_back(column3);
+    world.push_back(column4);
+    world.push_back(column5);
+    world.push_back(column6);
 
     std::cout << "initializeWorld: initialized the matrix of the world" << std::endl;
 }
 
+//create a basic ground tile
 void ex4::createGround()
 {
     ground_vertices.clear();
@@ -227,19 +218,19 @@ void ex4::createGround()
 
     //0
     ground_vertices.push_back(0);
-    ground_vertices.push_back(-1);
+    ground_vertices.push_back(0);
     ground_vertices.push_back(0);
     //1
     ground_vertices.push_back(dimension);
-    ground_vertices.push_back(-1);
+    ground_vertices.push_back(0);
     ground_vertices.push_back(0);
     //2
     ground_vertices.push_back(0);
-    ground_vertices.push_back(-1);
+    ground_vertices.push_back(0);
     ground_vertices.push_back(dimension);
     //3
     ground_vertices.push_back(dimension);
-    ground_vertices.push_back(-1);
+    ground_vertices.push_back(0);
     ground_vertices.push_back(dimension);
 
     //face 1
@@ -264,53 +255,131 @@ void ex4::createGround()
     std::cout << "createGround: creata ground tile con vertici:" << ground_vertices.size() << " , faccie:" << ground_faces.size() << " , e normals:"<< ground_normals.size() << std::endl;
 }
 
+//create a basic x-aligned wall tile
+//it is possible to create also the z-aligned one
 void ex4::createWall()
 {
     wall_vertices.clear();
     wall_faces.clear();
     wall_normals.clear();
 
-
+    //dimension of ground
     float dimension = tileDimension;
-    float off = tileDimension/10;
+    //half-thickness of the wall
+    float off = tileDimension/20;
+
+    //NOTE: adding off to dimension in order to cover the corner
+
+    std::cout << "createWall: dimension:"<<dimension<<" and off:"<<off<<std::endl;
     //cube 1
     //0
-    ground_vertices.push_back(off);
-    ground_vertices.push_back(-1);
-    ground_vertices.push_back(0);
+    wall_vertices.push_back(off);
+    wall_vertices.push_back(0);
+    wall_vertices.push_back(0);
     //1
-    ground_vertices.push_back(off);
-    ground_vertices.push_back(-1);
-    ground_vertices.push_back(dimension);
+    wall_vertices.push_back(off);
+    wall_vertices.push_back(0);
+    wall_vertices.push_back(dimension + off);
     //2
-    ground_vertices.push_back(off);
-    ground_vertices.push_back(-1 + dimension);
-    ground_vertices.push_back(0);
+    wall_vertices.push_back(off);
+    wall_vertices.push_back(dimension + off);
+    wall_vertices.push_back(0);
     //3
-    ground_vertices.push_back(off);
-    ground_vertices.push_back(-1 + dimension);
-    ground_vertices.push_back(dimension);
+    wall_vertices.push_back(off);
+    wall_vertices.push_back(dimension + off);
+    wall_vertices.push_back(dimension + off);
+
+    //face 0
+    wall_faces.push_back(1);
+    wall_faces.push_back(0);
+    wall_faces.push_back(2);
+
+    wall_faces.push_back(1);
+    wall_faces.push_back(2);
+    wall_faces.push_back(3);
+
+    //cube 2
+    //4
+    wall_vertices.push_back(-off);
+    wall_vertices.push_back(0);
+    wall_vertices.push_back(0);
+    //5
+    wall_vertices.push_back(-off);
+    wall_vertices.push_back(0);
+    wall_vertices.push_back(dimension + off);
+    //6
+    wall_vertices.push_back(-off);
+    wall_vertices.push_back(dimension + off);
+    wall_vertices.push_back(0);
+    //7
+    wall_vertices.push_back(-off);
+    wall_vertices.push_back(dimension + off);
+    wall_vertices.push_back(dimension + off);
 
     //face 1
-    ground_faces.push_back(1);
-    ground_faces.push_back(0);
-    ground_faces.push_back(2);
-    //face 2
-    ground_faces.push_back(1);
-    ground_faces.push_back(2);
-    ground_faces.push_back(3);
+    wall_faces.push_back(4);
+    wall_faces.push_back(5);
+    wall_faces.push_back(6);
+
+    wall_faces.push_back(5);
+    wall_faces.push_back(7);
+    wall_faces.push_back(6);
 
     for(int i = 0; i<4; i++)
     {
-        ground_normals.push_back(1);
-        ground_normals.push_back(0);
-        ground_normals.push_back(0);
+        wall_normals.push_back(1);
+        wall_normals.push_back(0);
+        wall_normals.push_back(0);
+
+    }
+    for(int i = 0; i<4; i++)
+    {
+        wall_normals.push_back(1);
+        wall_normals.push_back(0);
+        wall_normals.push_back(0);
 
     }
 
-//    data_representation::ComputeVertexNormals(ground_vertices, ground_faces, &ground_normals);
+    //face 2
+    wall_faces.push_back(0);
+    wall_faces.push_back(5);
+    wall_faces.push_back(4);
 
-    std::cout << "createGround: creata ground tile con vertici:" << ground_vertices.size() << " , faccie:" << ground_faces.size() << " , e normals:"<< ground_normals.size() << std::endl;
+    wall_faces.push_back(0);
+    wall_faces.push_back(1);
+    wall_faces.push_back(5);
+
+    //face 3
+    wall_faces.push_back(1);
+    wall_faces.push_back(7);
+    wall_faces.push_back(5);
+
+    wall_faces.push_back(1);
+    wall_faces.push_back(3);
+    wall_faces.push_back(7);
+
+    //face 4
+    wall_faces.push_back(3);
+    wall_faces.push_back(6);
+    wall_faces.push_back(7);
+
+    wall_faces.push_back(3);
+    wall_faces.push_back(2);
+    wall_faces.push_back(6);
+
+    //face 5
+    wall_faces.push_back(0);
+    wall_faces.push_back(6);
+    wall_faces.push_back(2);
+
+    wall_faces.push_back(0);
+    wall_faces.push_back(4);
+    wall_faces.push_back(6);
+
+
+//    data_representation::ComputeVertexNormals(wall_vertices, wall_faces, &wall_normals);
+
+    std::cout << "createwall: creata wall tile con vertici:" << wall_vertices.size() << " , faccie:" << wall_faces.size() << " , e normals:"<< wall_normals.size() << std::endl;
 }
 
 
@@ -320,35 +389,42 @@ void ex4::initVertexBuffer()
     std::cout << "initVertexBuffer: " << std::endl;
 
     t_Timer.start();
-
-    if (mesh_ != nullptr)
-    {
-        glGenVertexArrays(1,&vao);
-        glBindVertexArray(vao);
-
-
-        glGenBuffers(1,&vboVertex);
-        glGenBuffers(1,&vboNormal);
-        glGenBuffers(1,&vboIndex);
-
-        //Vertex positions
-        glBindBuffer(GL_ARRAY_BUFFER,vboVertex);
-        glBufferData(GL_ARRAY_BUFFER,new_vertices.size()* sizeof(GLfloat),&new_vertices[0],GL_STATIC_DRAW);
-        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
-        glEnableVertexAttribArray(0);
-
-        //Vertex normals
-        glBindBuffer(GL_ARRAY_BUFFER,vboNormal);
-        glBufferData(GL_ARRAY_BUFFER,new_normals.size() * sizeof(float),&new_normals[0],GL_STATIC_DRAW);
-        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
-        glEnableVertexAttribArray(1);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,new_faces.size()* sizeof(int),&new_faces[0],GL_STATIC_DRAW);
-
-    }
     if(startPrinting)
     {
+
+        if (mesh_ != nullptr)
+        {
+            std::cout << "initVertexBuffer:mesh initilization" << std::endl;
+
+            glGenVertexArrays(1,&vao);
+            glBindVertexArray(vao);
+
+            glGenBuffers(1,&vboVertex);
+            glGenBuffers(1,&vboNormal);
+            glGenBuffers(1,&vboIndex);
+
+            //Vertex positions
+            glBindBuffer(GL_ARRAY_BUFFER,vboVertex);
+            glBufferData(GL_ARRAY_BUFFER,mesh_->vertices_.size()* sizeof(GLfloat),&mesh_->vertices_[0],GL_STATIC_DRAW);
+            glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
+            glEnableVertexAttribArray(0);
+
+            //Vertex normals
+            glBindBuffer(GL_ARRAY_BUFFER,vboNormal);
+            glBufferData(GL_ARRAY_BUFFER,mesh_->normals_.size() * sizeof(float),&mesh_->normals_[0],GL_STATIC_DRAW);
+            glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
+            glEnableVertexAttribArray(1);
+
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER,mesh_->faces_.size()* sizeof(int),&mesh_->faces_[0],GL_STATIC_DRAW);
+
+            glBindVertexArray(0);
+
+
+        }
+
+        std::cout << "initVertexBuffer: store ground" << std::endl;
+
         createGround();
 
         glGenVertexArrays(1,&vaoG);
@@ -377,7 +453,7 @@ void ex4::initVertexBuffer()
 
         glBindVertexArray(0);
 
-
+        std::cout << "initVertexBuffer: store wall" << std::endl;
 
         createWall();
 
@@ -480,6 +556,7 @@ void ex4::startMuseum()
 {
     std::cout << "----> starting the application "<< std::endl;
     initializeWorld();
+//    uploadModel();
     startPrinting = true;
     initVertexBuffer();
     paintGL();

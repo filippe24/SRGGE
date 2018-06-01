@@ -80,4 +80,5 @@ DISTFILES += \
     shaders/separable.frag \
     shaders/separable.vert \
     shaders/try.frag \
-    shaders/try.vert
+    shaders/try.vert \
+    shaders/try_color.frag

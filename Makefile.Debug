@@ -112,6 +112,7 @@ DIST          = shaders/ssao_geom.frag \
 		shaders/separable.vert \
 		shaders/try.frag \
 		shaders/try.vert \
+		shaders/try_color.frag \
 		/usr/lib/qt/mkspecs/features/spec_pre.prf \
 		/usr/lib/qt/mkspecs/common/unix.conf \
 		/usr/lib/qt/mkspecs/common/linux.conf \
