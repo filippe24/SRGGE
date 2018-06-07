@@ -86,10 +86,10 @@ MainWindow::createWidgets()
         << "Separable Version"
         << "Exercise 1"
         << "Exercise 2"
-        << "Excersise 3"
-        << "Excersise 4"
-        << "Excersise 5"
-        << "Excersise 6";
+        << "Exercise 3"
+        << "Exercise 4"
+        << "Exercise 5"
+        << "Exercise 6";
 
 	// format for legacy OpenGL with older GLSL (supporting attribute/varying qualifiers)
 	QGLFormat glfLegacy = QGLFormat::defaultFormat();	// base format

@@ -13,9 +13,9 @@
 #include <QKeyEvent>
 
 
-#include "FRR/Viewer1.h"
+#include "SRGGE/ex2.h"
 
-class ex4 : public Viewer1
+class ex4 : public ex2
 {
     Q_OBJECT
 
@@ -24,37 +24,26 @@ public:
     void		initVertexBuffer();		// init vertices
     QGroupBox*  controlPanel();
 
-    void            initializeWorld();
-    void            createGround();
-    void            createWall();
-    bool            LoadModel(QString filename);
+
+    void generateMeshes();
 
 
+    std::vector<std::vector<int>>     levels;
 
-    //variables
-    bool startPrinting = false;
-    int             worldDimension = 0;
-    float           tileDimension = 0;
-    std::vector<std::vector<int>> world;
-    std::vector<float>      ground_vertices;
-    std::vector<int>        ground_faces;
-    std::vector<float>      ground_normals;
+    std::vector<std::vector<float>>   vertices;
+    std::vector<std::vector<float>>   normals;
+    std::vector<std::vector<int>>   faces;
 
-    std::vector<float>      wall_vertices;
-    std::vector<int>        wall_faces;
-    std::vector<float>      wall_normals;
 
-    std::vector<float>      new_vertices;
-    std::vector<int>        new_faces;
-    std::vector<float>      new_normals;
+    GLuint vao0, vao1, vao2, vao3;
+    GLuint vboVertex0, vboVertex1, vboVertex2, vboVertex3;
+    GLuint vboNormal0, vboNormal1, vboNormal2, vboNormal3;
+    GLuint vboIndex0, vboIndex1, vboIndex2, vboIndex3;
 
-    std::unique_ptr<data_representation::TriangleMesh> mesh1;
-    float                   scalingFactor;
-
-    GLuint vaoG, vaoW;
-    GLuint vboVertexG, vboVertexW;
-    GLuint vboNormalG, vboNormalW;
-    GLuint vboIndexG, vboIndexW;
+    std::vector<GLuint> vaoV;
+    std::vector<GLuint> vboVertexV;
+    std::vector<GLuint> vboNormalV;
+    std::vector<GLuint> vboIndexeV;
 
 
     //time and shader
@@ -74,7 +63,6 @@ protected:
 
 public slots:
     void setNumberCopies(int);
-    void startMuseum();
 
 
 signals:

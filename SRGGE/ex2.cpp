@@ -555,17 +555,7 @@ void ex2::initVertexBuffer()
 
 }
 
-//QPushButton *buttonReset = new QPushButton("Reset");
-//QPushButton *buttonQuit  = new QPushButton("Quit");
 
-//// init signal/slot connections
-//connect(buttonReset, SIGNAL(clicked()), this, SLOT(reset()));
-//connect(buttonQuit , SIGNAL(clicked()), this, SLOT(quit ()));
-
-//// assemble pushbuttons in horizontal layout
-//QHBoxLayout *buttonLayout = new QHBoxLayout;
-//buttonLayout->addWidget(buttonReset);
-//buttonLayout->addWidget(buttonQuit );
 QGroupBox* ex2::controlPanel()
 {
     // init group box
