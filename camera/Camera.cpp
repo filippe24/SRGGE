@@ -234,11 +234,11 @@ void Camera::MoveY(double modifier){
 }
 
 void Camera::RotateX(double modifier) {
-  rotation_x_ += AngleIncrement * modifier * 4;
+  rotation_x_ += AngleIncrement * modifier * 7;
 }
 
 void Camera::RotateY(double modifier) {
-  rotation_y_ += AngleIncrement * modifier * 3;
+  rotation_y_ += AngleIncrement * modifier * 7;
 }
 
 void Camera::activateMuseumCamera()

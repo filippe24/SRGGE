@@ -1,5 +1,3 @@
-
-
 #include "ex5.h"
 #include "Helpers/mesh_importer.h"
 #include <glm/glm.hpp>
@@ -49,7 +47,7 @@ void ex5::initializeGL()
 
 void ex5::paintGL()
 {
-
+    std::cout <<"paintGL: " << std::endl;
 
     // Render to our framebuffer
     glViewport(0,0,width_,height_); // Render on the whole framebuffer
@@ -76,14 +74,12 @@ void ex5::paintGL()
 
         normal = normal.inverse().transpose();
 
-        for(int i = 0; i<worldDimension; i++)
+        for(uint i = 0; i<world.size(); i++)
         {
-            for(int j = 0; j<worldDimension; j++)
+            for(uint j = 0; j<world[0].size(); j++)
             {
-//                std::cout<<"cella matrice ["<< i << "]["<<j<<"]"<<std::endl;
 
                 //Translation
-//                Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f((-worldDimension/2*tileDimension)+2*tileDimension*float(i),0,(-worldDimension/2*tileDimension)+2*tileDimension*float(j))));
                 Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-tileDimension*float(i),-1,-tileDimension*float(j))));
                 Eigen::Matrix4f m = t.matrix();
                 model = model * m;
@@ -106,26 +102,39 @@ void ex5::paintGL()
                 glUniform3f( color_location, 1.0,1.0,1.0);
 
 
-                //render ground
+                //render ground interior=1 exterior=0
                 if(world[i][j] ==  0)
-                    glUniform3f( color_location, 1.0,1.0,1.0);
+                    glUniform3f( color_location, 0.2,0.6,0.0);
                 else if(world[i][j] == 1)
                     glUniform3f( color_location, 0.3,0.0,0.0);
                 else if(world[i][j] == 2)
                     glUniform3f( color_location, 0.7,0.0,0.0);
                 else
-                    glUniform3f( color_location, 0.3,0.3,0.0);
+                    glUniform3f( color_location, 0.8,0.0,0.0);
+
+                //render ground ground=0 wall=1
+//                if(!isInterior(i,j))
+//                    glUniform3f( color_location, 1.0,1.0,1.0);
+//                else if(isInterior(i,j))
+//                    glUniform3f( color_location, 0.3,0.0,0.0);
+//                else
+//                    glUniform3f( color_location, 0.3,0.3,0.0);
+//                if(world[i][j] == 2)
+//                    glUniform3f( color_location, 0.7,0.0,0.0);
+
 
                 glBindVertexArray(vaoG);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexG);
                 glDrawElements(GL_TRIANGLES,ground_faces.size(),GL_UNSIGNED_INT,0);
                 glBindVertexArray(0);
 
+                //test-----
+//                isInterior(i,j);
 
                 //render x-aligned wall
-                if((i != (worldDimension-1)) && (world[i][j] != world[i+1][j]) && (world[i][j] != 2) && (world[i+1][j] != 2))
+                if((i != (world.size()-1)) && ((world[i][j] == 1 && world[i+1][j] == 0) || (world[i][j] == 0 && world[i+1][j] == 1)) && (world[i][j] != 2) && (world[i+1][j] != 2))
                 {
-                    glUniform3f( color_location, 0.0,0.0,0.4);
+                    glUniform3f( color_location, 0.7,0.7,0.7);
 
                     glBindVertexArray(vaoW);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
@@ -134,14 +143,14 @@ void ex5::paintGL()
 
                 }
                 //render z-aligned walls
-                if((j != (worldDimension-1)) && (world[i][j] != world[i][j+1]) && (world[i][j] != 2) && (world[i][j+1] != 2))
+                if((j != (world[0].size()-1)) && ((world[i][j] == 1 && world[i][j+1] == 0) || (world[i][j] == 0 && world[i][j+1] == 1))  && (world[i][j] != 2) && (world[i][j+1] != 2))
                 {
                     //uploading the model matrix with 90 degree rotation
                     Eigen::Matrix4f rotatedModel = model*A.matrix();
                     GLuint rotated_model_location = glGetUniformLocation(gShaderID,"u_model");
                     glUniformMatrix4fv(rotated_model_location, 1, GL_FALSE, rotatedModel.data());
 
-                    glUniform3f( color_location, 0.0,0.0,0.4);
+                    glUniform3f( color_location, 0.7,0.7,0.7);
 
                     glBindVertexArray(vaoW);
                     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
@@ -150,36 +159,49 @@ void ex5::paintGL()
 
                 }
 
-                if(world[i][j]== 3 && (mesh1 != nullptr))
+
+                if(world[i][j] > 2)
                 {
+                    std::cout <<"paintGL: start painting models" << std::endl;
+
+                    std::cout <<"paintGL: numero di modelli totale "<< numberOfModels << std::endl;
+
+                    //indice per accesso
+                    int m = world[i][j]-3;
+
+                    if(meshes[m] != nullptr)
+                   {
+                        std::cout <<"paintGL: modello attuale m: "<< m << std::endl;
+
+                        //serve un'altra translazione per mettere i conigli al centro della tile!!
+                        float onTheGround = -(meshes[m]->min_[1]);
+                        float sf = scalingFactors[m];
+
+                        Eigen::Affine3f t2(Eigen::Translation3f(Eigen::Vector3f((tileDimension/2), sf*onTheGround , (tileDimension/2))));
+                        Eigen::Matrix4f translatonModel = t2.matrix();
+
+                        Eigen::Matrix4f S;
+                        S << sf, 0 , 0 , 0,
+                             0 , sf, 0 , 0,
+                             0 , 0 , sf, 0,
+                             0 , 0 , 0 , 1;
+
+                        Eigen::Matrix4f scaledModel = model*translatonModel*S;
+                        GLuint scaled_model_location = glGetUniformLocation(gShaderID,"u_model");
+                        glUniformMatrix4fv(scaled_model_location, 1, GL_FALSE, scaledModel.data());
+
+                        glUniform3f( color_location, 1.0,1.0,1.0);
+
+                        std::cout <<"paintGL: vao di m: "<< m <<"  e' :"<<vaoMs[m]  <<std::endl;
+                        std::cout <<"paintGL: numero di facce : "<< meshes[m]->faces_.size() <<std::endl;
 
 
-                    //serve un'altra translazione per mettere i conigli al centro della tile!!
-                    float onTheGround = -(mesh1->min_[1]);
-                    float sf = scalingFactor;
-
-                    Eigen::Affine3f t2(Eigen::Translation3f(Eigen::Vector3f((tileDimension/2), sf*onTheGround , (tileDimension/2))));
-                    Eigen::Matrix4f translatonModel = t2.matrix();
-
-                    Eigen::Matrix4f S;
-                    S << sf, 0 , 0 , 0,
-                         0 , sf, 0 , 0,
-                         0 , 0 , sf, 0,
-                         0 , 0 , 0 , 1;
-
-                    Eigen::Matrix4f scaledModel = model*translatonModel*S;
-                    GLuint scaled_model_location = glGetUniformLocation(gShaderID,"u_model");
-                    glUniformMatrix4fv(scaled_model_location, 1, GL_FALSE, scaledModel.data());
-
-                    glUniform3f( color_location, 1.0,1.0,1.0);
-
-
-                    //RENDER MODEL
-                    glBindVertexArray(vao);
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
-                    glDrawElements(GL_TRIANGLES,mesh1->faces_.size(),GL_UNSIGNED_INT,0);
-                    glBindVertexArray(0);
-
+                        //RENDER MODEL
+                        glBindVertexArray(vaoMs[m]);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexMs[m]);
+                        glDrawElements(GL_TRIANGLES,meshes[m]->faces_.size(),GL_UNSIGNED_INT,0);
+                        glBindVertexArray(0);
+                   }
                 }
 
 
@@ -205,28 +227,177 @@ void ex5::paintGL()
 
 }
 
+bool ex5::isInterior( int i, int j)
+{
+
+    bool up_bool = false;
+    bool dw_bool = false;
+    bool rx_bool = false;
+    bool lx_bool = false;
+
+    int up = i;
+    int dw = i;
+    int rx = j;
+    int lx = j;
+
+    //UP
+    if(i>0){
+        while(!up_bool && up>0){
+            up_bool = (world[up-1][j]==1);
+            up-=1;
+        }
+    }
+
+    //DOWN
+    if(i<((int) world.size())){
+        while(!dw_bool && dw<((int) world.size()-1)){
+            dw_bool = (world[dw+1][j]==1);
+            dw+=1;
+        }
+    }
+
+    //LEFT
+    if(j>0){
+        while(!lx_bool && lx>0){
+            lx_bool=(world[i][lx-1]==1);
+            lx-=1;
+        }
+    }
+
+    //RIGHT
+    if(j<((int) world[0].size())){
+        while(!rx_bool && rx<((int) world[0].size()-1)){
+            rx_bool=(world[i][rx+1]==1);
+            rx+=1;
+        }
+    }
+
+    bool returned = up_bool && dw_bool && lx_bool && rx_bool;
+
+    if(returned)
+        std::cout << "la cella i:"<<i<<", j;"<<j<<" e' interna" <<std::endl;
+    else
+        std::cout << "la cella i:"<<i<<", j;"<<j<<" e' esterna" <<std::endl;
+
+    return (returned);
+
+}
+
 
 //read the input file and generate the matrix of the world
 void ex5::initializeWorld()
 {
 
-    worldDimension = 6;
-    tileDimension = 3;
-    std::vector<int> column1 = {3,3,0,0,0,0};
-    std::vector<int> column2 = {3,1,1,0,0,0};
-    std::vector<int> column3 = {0,1,1,0,0,0};
-    std::vector<int> column4 = {0,2,1,1,3,0};
-    std::vector<int> column5 = {0,0,0,1,3,0};
-    std::vector<int> column6 = {0,0,0,0,0,0};
+    world.clear();
+    meshes.clear();
 
-    world.push_back(column1);
-    world.push_back(column2);
-    world.push_back(column3);
-    world.push_back(column4);
-    world.push_back(column5);
-    world.push_back(column6);
+    //load map
+    QString filename;
+    filename = QFileDialog::getOpenFileName(this, tr("Load map"), "/home/al/Documents/Un/srgge/prj/SRGGE/models",
+                                              tr("TXT Files ( *.txt )"));
+    if (!filename.isNull())
+    {
+
+        std::string file = filename.toUtf8().constData();
+        uint pos = file.find_last_of(".");
+        std::string type = file.substr(pos + 1);
+
+         if(!openFile(file))
+         {
+              QMessageBox::warning(this, tr("Error"),
+                              tr("The file could not be opened, initialize the default world"));
+
+              tileDimension = 3;
+              std::vector<int> column1 = {3,3,0,0,0,0};
+              std::vector<int> column2 = {3,1,1,0,0,0};
+              std::vector<int> column3 = {0,1,1,0,0,0};
+              std::vector<int> column4 = {0,2,1,1,3,0};
+              std::vector<int> column5 = {0,0,0,1,3,0};
+              std::vector<int> column6 = {0,0,0,0,0,0};
+
+              world.push_back(column1);
+              world.push_back(column2);
+              world.push_back(column3);
+              world.push_back(column4);
+              world.push_back(column5);
+              world.push_back(column6);
+
+
+         }
+         else
+         {
+             tileDimension = 3;
+         }
+    }
+
+
+    //load models
+    for(int i=0; i<numberOfModels; i++)
+    {
+        meshes.push_back(std::unique_ptr<data_representation::TriangleMesh>(new data_representation::TriangleMesh));
+        QString modelfilename;
+        modelfilename = QFileDialog::getOpenFileName(this, tr("Load model"), "/home/al/Documents/Un/srgge/prj/SRGGE/models",
+                                                  tr("TXT Files ( *.ply )"));
+        if (!modelfilename.isNull())
+        {
+            if(!LoadModel(modelfilename, i))
+            {
+                 QMessageBox::warning(this, tr("Error"),
+                                 tr("The file could not be opened, initialize the default world"));
+            }
+        }
+
+    }
+
 
     std::cout << "initializeWorld: initialized the matrix of the world" << std::endl;
+}
+
+
+
+
+bool ex5::openFile(const std::string &filename)
+{
+    world.clear();
+    numberOfModels = 0;
+
+    //maximum number saved in file ---> to define the number of models to upload
+    int maxVal = 0;
+
+
+    std::ifstream fin;
+    fin.open(filename.c_str());
+    if (!fin.is_open() || !fin.good()) return false;
+
+    std::string line;
+    for(int i=0; std::getline(fin,line);i++){
+
+        std::stringstream ss;
+        ss << line;
+        std::vector<int> temp;
+
+        world.push_back(temp);
+
+        int val;
+        while(ss >> val){
+            world[i].push_back(val);
+            if(val > maxVal)
+                maxVal = val;
+        }
+    }
+
+    fin.close();
+
+
+    if(maxVal > 2)
+    {
+        numberOfModels = maxVal - 2;
+        std::cout << " number of models in the file " << filename << " is:" << numberOfModels << std::endl;
+    }
+
+
+    return true;
+
 }
 
 //create a basic ground tile
@@ -411,38 +582,66 @@ void ex5::initVertexBuffer()
 {
     std::cout << "initVertexBuffer: " << std::endl;
 
+
+    //clear the buffer of the models
+    vaoMs.clear();
+    vboVertexMs.clear();
+    vboNormalMs.clear();
+    vboIndexMs.clear();
+
     t_Timer.start();
     if(startPrinting)
     {
 
-        if (mesh1 != nullptr)
+        for(int m=0; m<numberOfModels; m++)
         {
-            std::cout << "initVertexBuffer:mesh initilization" << std::endl;
 
-            glGenVertexArrays(1,&vao);
-            glBindVertexArray(vao);
+            if(meshes[m] != nullptr)
+           {
+                std::cout << "initVertexBuffer: inizializzazione della mesh "<< m << std::endl;
+                std::cout << "initVertexBuffer: mesh vertices :" << meshes[m]->vertices_.size() << "  mesh faces: "<<meshes[m]->faces_.size() << std::endl;
 
-            glGenBuffers(1,&vboVertex);
-            glGenBuffers(1,&vboNormal);
-            glGenBuffers(1,&vboIndex);
 
-            //Vertex positions
-            glBindBuffer(GL_ARRAY_BUFFER,vboVertex);
-            glBufferData(GL_ARRAY_BUFFER,mesh1->vertices_.size()* sizeof(GLfloat),&mesh1->vertices_[0],GL_STATIC_DRAW);
-            glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
-            glEnableVertexAttribArray(0);
+                GLuint tempVao = 0;
+                GLuint tempVboVertex;
+                GLuint tempVboNormal;
+                GLuint tempVboIndex;
 
-            //Vertex normals
-            glBindBuffer(GL_ARRAY_BUFFER,vboNormal);
-            glBufferData(GL_ARRAY_BUFFER,mesh1->normals_.size() * sizeof(float),&mesh1->normals_[0],GL_STATIC_DRAW);
-            glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
-            glEnableVertexAttribArray(1);
+                std::cout << "initVertexBuffer:mesh initilization" << std::endl;
+                std::cout << "initVertexBuffer: vao prima" <<tempVao << std::endl;
 
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER,mesh1->faces_.size()* sizeof(int),&mesh1->faces_[0],GL_STATIC_DRAW);
+                glGenVertexArrays(1,&tempVao);
+                vaoMs.push_back(tempVao);
+                glBindVertexArray(vaoMs[m]);
 
-            glBindVertexArray(0);
+                std::cout << "initVertexBuffer: vao dopo:" <<tempVao << " e quello salvato nel vettore:" <<vaoMs[m] << "  a posizione m=" <<m<< std::endl;
 
+
+                glGenBuffers(1,&tempVboVertex);
+                glGenBuffers(1,&tempVboNormal);
+                glGenBuffers(1,&tempVboIndex);
+
+                vboVertexMs.push_back(tempVboVertex);
+                vboNormalMs.push_back(tempVboNormal);
+                vboIndexMs.push_back(tempVboIndex);
+
+                //Vertex positions
+                glBindBuffer(GL_ARRAY_BUFFER,vboVertexMs[m]);
+                glBufferData(GL_ARRAY_BUFFER,meshes[m]->vertices_.size()* sizeof(GLfloat),&meshes[m]->vertices_[0],GL_STATIC_DRAW);
+                glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0 ,0);
+                glEnableVertexAttribArray(0);
+
+                //Vertex normals
+                glBindBuffer(GL_ARRAY_BUFFER,vboNormalMs[m]);
+                glBufferData(GL_ARRAY_BUFFER,meshes[m]->normals_.size() * sizeof(float),&meshes[m]->normals_[0],GL_STATIC_DRAW);
+                glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
+                glEnableVertexAttribArray(1);
+
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexMs[m]);
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER,meshes[m]->faces_.size()* sizeof(int),&meshes[m]->faces_[0],GL_STATIC_DRAW);
+
+                glBindVertexArray(0);
+            }
 
         }
 
@@ -579,7 +778,7 @@ void ex5::startMuseum()
 {
     std::cout << "----> starting the application "<< std::endl;
     initializeWorld();
-    LoadModel(QString("/home/al/Downloads/bunny.ply"));
+//    LoadModel(QString("/home/al/Downloads/bunny.ply"));
     startPrinting = true;
     camera_.activateMuseumCamera();
     initVertexBuffer();
@@ -593,39 +792,41 @@ void ex5::setNumberCopies(int N)
 }
 
 
-bool ex5::LoadModel(QString filename) {
+bool ex5::LoadModel(QString filename, int i)
+{
   std::string file = filename.toUtf8().constData();
   uint pos = file.find_last_of(".");
   std::string type = file.substr(pos + 1);
 
-  mesh1 = std::unique_ptr<data_representation::TriangleMesh>(new data_representation::TriangleMesh);
+//    meshes.push_back(std::unique_ptr<data_representation::TriangleMesh>(new data_representation::TriangleMesh));
+
 
   bool res = false;
   if (type.compare("ply") == 0) {
-    res = data_representation::ReadFromPly(file, mesh1.get());
+    res = data_representation::ReadFromPly(file, meshes[i].get());
   }
 
   if (res) {
 
-        std::cout << "LoadModel : creata mesh con vertici:" << mesh1->vertices_.size() << " faccie:" << mesh1->faces_.size() << " normals:" <<mesh1->normals_.size() <<std::endl;
+        std::cout << "LoadModel : creata mesh con vertici:" << meshes[i]->vertices_.size() << " faccie:" << meshes[i]->faces_.size() << " normals:" <<meshes[i]->normals_.size() <<std::endl;
 
-        float x_dim_mesh = mesh1->max_[0] - mesh1->min_[0];
-        float z_dim_mesh = mesh1->max_[2] - mesh1->min_[2];
+        float x_dim_mesh = meshes[i]->max_[0] - meshes[i]->min_[0];
+        float z_dim_mesh = meshes[i]->max_[2] - meshes[i]->min_[2];
         std::cout << "LoadModel : dimensione x:" << x_dim_mesh << " e z:"<< z_dim_mesh  <<std::endl;
         float maxDim;
         if(x_dim_mesh < z_dim_mesh)
             maxDim = z_dim_mesh;
         else
             maxDim = x_dim_mesh;
-        scalingFactor = (tileDimension - (tileDimension/3))/maxDim;
+        scalingFactors.push_back((tileDimension - (tileDimension/3))/maxDim);
 
-//      mesh1.reset(mesh1.release());
-//      camera_.UpdateModel(mesh1->min_, mesh1->max_);
+//      meshes[i].reset(meshes[i].release());
+//      camera_.UpdateModel(meshes[i]->min_, meshes[i]->max_);
 
-//      m_facesCount->setText(QString(std::to_string(m_hw->mesh1->faces_.size() / 3).c_str()));
-//      m_vertexCount->setText(QString(std::to_string(m_hw->mesh1->vertices_.size() / 3).c_str()));
+//      m_facesCount->setText(QString(std::to_string(m_hw->meshes[i]->faces_.size() / 3).c_str()));
+//      m_vertexCount->setText(QString(std::to_string(m_hw->meshes[i]->vertices_.size() / 3).c_str()));
 
-//      camera_.UpdateModel(mesh1->min_, mesh1->max_);
+//      camera_.UpdateModel(meshes[i]->min_, meshes[i]->max_);
 
 //      initVertexBuffer();
       return true;

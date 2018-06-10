@@ -25,15 +25,20 @@ public:
     QGroupBox*  controlPanel();
 
     void            initializeWorld();
+    bool            openFile(const std::string &filename);
+    bool            isInterior( int i, int j);
     void            createGround();
     void            createWall();
-    bool            LoadModel(QString filename);
+    bool            LoadModel(QString filename, int i);
+
+    //define the number of models on the museum file ( how many number >2 )
+    int             numberOfModels = 0;
+
 
 
 
     //variables
     bool startPrinting = false;
-    int             worldDimension = 0;
     float           tileDimension = 0;
     std::vector<std::vector<int>> world;
     std::vector<float>      ground_vertices;
@@ -48,8 +53,15 @@ public:
     std::vector<int>        new_faces;
     std::vector<float>      new_normals;
 
-    std::unique_ptr<data_representation::TriangleMesh> mesh1;
-    float                   scalingFactor;
+    std::vector<std::unique_ptr<data_representation::TriangleMesh>> meshes;
+    std::vector<float>      scalingFactors;
+//    float                   scalingFactor;
+
+
+    std::vector<GLuint> vaoMs;
+    std::vector<GLuint> vboVertexMs;
+    std::vector<GLuint> vboNormalMs;
+    std::vector<GLuint> vboIndexMs;
 
     GLuint vaoG, vaoW;
     GLuint vboVertexG, vboVertexW;
