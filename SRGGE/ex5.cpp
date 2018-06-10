@@ -47,7 +47,6 @@ void ex5::initializeGL()
 
 void ex5::paintGL()
 {
-    std::cout <<"paintGL: " << std::endl;
 
     // Render to our framebuffer
     glViewport(0,0,width_,height_); // Render on the whole framebuffer
@@ -78,6 +77,8 @@ void ex5::paintGL()
         {
             for(uint j = 0; j<world[0].size(); j++)
             {
+                std::cout <<"paintGL: i:"<<i <<"  j:"<<j << std::endl;
+
 
                 //Translation
                 Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-tileDimension*float(i),-1,-tileDimension*float(j))));
@@ -159,19 +160,14 @@ void ex5::paintGL()
 
                 }
 
-
+                //render the uploaded models
                 if(world[i][j] > 2)
                 {
-                    std::cout <<"paintGL: start painting models" << std::endl;
-
-                    std::cout <<"paintGL: numero di modelli totale "<< numberOfModels << std::endl;
-
-                    //indice per accesso
+                    //index of the model and buffers
                     int m = world[i][j]-3;
 
                     if(meshes[m] != nullptr)
                    {
-                        std::cout <<"paintGL: modello attuale m: "<< m << std::endl;
 
                         //serve un'altra translazione per mettere i conigli al centro della tile!!
                         float onTheGround = -(meshes[m]->min_[1]);
@@ -191,10 +187,6 @@ void ex5::paintGL()
                         glUniformMatrix4fv(scaled_model_location, 1, GL_FALSE, scaledModel.data());
 
                         glUniform3f( color_location, 1.0,1.0,1.0);
-
-                        std::cout <<"paintGL: vao di m: "<< m <<"  e' :"<<vaoMs[m]  <<std::endl;
-                        std::cout <<"paintGL: numero di facce : "<< meshes[m]->faces_.size() <<std::endl;
-
 
                         //RENDER MODEL
                         glBindVertexArray(vaoMs[m]);
@@ -227,6 +219,8 @@ void ex5::paintGL()
 
 }
 
+
+//check if a ground is interior or not ( only if the maps are ground=0, walls= 1)
 bool ex5::isInterior( int i, int j)
 {
 
@@ -284,12 +278,18 @@ bool ex5::isInterior( int i, int j)
 }
 
 
-//read the input file and generate the matrix of the world
+//read the input file and generate the matrix of the world and uploads the models
 void ex5::initializeWorld()
 {
 
     world.clear();
     meshes.clear();
+
+    //message before load model
+    QMessageBox loadMsgBox;
+    loadMsgBox.setText("Choose a map file");
+    loadMsgBox.exec();
+
 
     //load map
     QString filename;
@@ -334,6 +334,12 @@ void ex5::initializeWorld()
     //load models
     for(int i=0; i<numberOfModels; i++)
     {
+        //message before loading the models
+        QMessageBox modelMsgBox;
+        QString modelMsg = QString("Load the ") + QString::number(i+1) + QString( " model, out of ") + QString::number(numberOfModels);
+        modelMsgBox.setText(modelMsg);
+        modelMsgBox.exec();
+
         meshes.push_back(std::unique_ptr<data_representation::TriangleMesh>(new data_representation::TriangleMesh));
         QString modelfilename;
         modelfilename = QFileDialog::getOpenFileName(this, tr("Load model"), "/home/al/Documents/Un/srgge/prj/SRGGE/models",
@@ -355,7 +361,7 @@ void ex5::initializeWorld()
 
 
 
-
+//open the file with the matrix of the world
 bool ex5::openFile(const std::string &filename)
 {
     world.clear();
@@ -596,7 +602,7 @@ void ex5::initVertexBuffer()
         for(int m=0; m<numberOfModels; m++)
         {
 
-            if(meshes[m] != nullptr)
+           if(meshes[m] != nullptr)
            {
                 std::cout << "initVertexBuffer: inizializzazione della mesh "<< m << std::endl;
                 std::cout << "initVertexBuffer: mesh vertices :" << meshes[m]->vertices_.size() << "  mesh faces: "<<meshes[m]->faces_.size() << std::endl;
@@ -640,6 +646,9 @@ void ex5::initVertexBuffer()
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexMs[m]);
                 glBufferData(GL_ELEMENT_ARRAY_BUFFER,meshes[m]->faces_.size()* sizeof(int),&meshes[m]->faces_[0],GL_STATIC_DRAW);
 
+
+                glBindBuffer(GL_ARRAY_BUFFER,0);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
                 glBindVertexArray(0);
             }
 
@@ -783,6 +792,7 @@ void ex5::startMuseum()
     camera_.activateMuseumCamera();
     initVertexBuffer();
     paintGL();
+    std::cout << "startMuseum: afterPaintGL" << std::endl;
 }
 
 void ex5::setNumberCopies(int N)
@@ -820,15 +830,6 @@ bool ex5::LoadModel(QString filename, int i)
             maxDim = x_dim_mesh;
         scalingFactors.push_back((tileDimension - (tileDimension/3))/maxDim);
 
-//      meshes[i].reset(meshes[i].release());
-//      camera_.UpdateModel(meshes[i]->min_, meshes[i]->max_);
-
-//      m_facesCount->setText(QString(std::to_string(m_hw->meshes[i]->faces_.size() / 3).c_str()));
-//      m_vertexCount->setText(QString(std::to_string(m_hw->meshes[i]->vertices_.size() / 3).c_str()));
-
-//      camera_.UpdateModel(meshes[i]->min_, meshes[i]->max_);
-
-//      initVertexBuffer();
       return true;
   }
 
