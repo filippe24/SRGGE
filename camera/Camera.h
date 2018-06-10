@@ -62,6 +62,7 @@ class Camera {
    */
   double pan_y_;
 
+
   /**
    * @brief current_x_ Should store the mouse current X to compute
    * displacements.
@@ -304,6 +305,21 @@ class Camera {
 
   double GetWidth(void);
   double GetHeight(void);
+
+
+  void MoveX(double modifier);
+  void MoveZ(double modifier);
+  void MoveY(double modifier);
+  void RotateX(double modifier);
+  void RotateY(double modifier);
+
+  double cam_rotation_x_;
+  double cam_rotation_y_;
+
+  bool museumOn = false;
+
+  void activateMuseumCamera();
+
 
 };
 

@@ -92,17 +92,20 @@ void HW::initShader(QString vshaderName, QString fshaderName)
 // CAMERA
 
 void HW::keyPressEvent(QKeyEvent *event) {
-  if (event->key() == Qt::Key_Up) camera_.Zoom(-5);
-  if (event->key() == Qt::Key_Down) camera_.Zoom(5);
+  if (event->key() == Qt::Key_Up) camera_.MoveZ(1);
+  if (event->key() == Qt::Key_Down) camera_.MoveZ(-1);
 
-  if (event->key() == Qt::Key_Left) camera_.Rotate(-1);
-  if (event->key() == Qt::Key_Right) camera_.Rotate(1);
+  if (event->key() == Qt::Key_Left) camera_.MoveX(1);
+  if (event->key() == Qt::Key_Right) camera_.MoveX(-1);
 
-  if (event->key() == Qt::Key_W) camera_.Zoom(-5);
-  if (event->key() == Qt::Key_S) camera_.Zoom(5);
+  if (event->key() == Qt::Key_X) camera_.MoveY(1);
+  if (event->key() == Qt::Key_Z) camera_.MoveY(-1);
 
-  if (event->key() == Qt::Key_A) camera_.Rotate(-1);
-  if (event->key() == Qt::Key_D) camera_.Rotate(1);
+  if (event->key() == Qt::Key_W) camera_.RotateX(-1);
+  if (event->key() == Qt::Key_S) camera_.RotateX(1);
+
+  if (event->key() == Qt::Key_A) camera_.RotateY(-1);
+  if (event->key() == Qt::Key_D) camera_.RotateY(1);
 
   updateGL();
 }

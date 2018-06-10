@@ -2,6 +2,9 @@
 #include <camera/Camera.h>
 
 
+
+#include <iostream>
+
 #define GLM_FORCE_RADIANS
 
 #include <algorithm>
@@ -39,7 +42,10 @@ Camera::Camera()
       scaling_(1.0f),
       field_of_view_(0.0f),
       z_near_(0.0f),
-      z_far_(0.0f) {}
+      z_far_(0.0f),
+      cam_rotation_x_(0.0f),
+      cam_rotation_y_(0.0f),
+      museumOn(false) {}
 
 void Camera::SetViewport(double x, double y, double w, double h) {
   viewport_x_ = x;
@@ -75,7 +81,17 @@ Eigen::Matrix4f Camera::SetView() const {
   const Eigen::Affine3f kRotationA(Eigen::AngleAxisf(rotation_x_, hra));
   const Eigen::Affine3f kRotationB(Eigen::AngleAxisf(rotation_y_, vra));
 
-  return kTranslation.matrix() * kRotationA.matrix() * kRotationB.matrix();
+
+  const Eigen::Affine3f cameraTranslation(
+      Eigen::Translation3f(Eigen::Vector3f(pan_x_, 0, -distance_)));
+  const Eigen::Affine3f cameraRotationA(Eigen::AngleAxisf(rotation_x_, hra));
+  const Eigen::Affine3f cameraRotationB(Eigen::AngleAxisf(rotation_y_, vra));
+
+
+    if(!museumOn)
+        return kTranslation.matrix() * kRotationA.matrix() * kRotationB.matrix();
+    else
+        return cameraRotationA.matrix() * cameraRotationB.matrix() * cameraTranslation.matrix();
 }
 
 Eigen::Matrix4f Camera::SetProjection(double fov, double znear, double zfar) {
@@ -197,6 +213,37 @@ double Camera::GetWidth(){
 
 double Camera::GetHeight(){
     return(viewport_height_);
+}
+
+void Camera::MoveX(double modifier){
+    pan_x_ += (float)cos(rotation_y_)*modifier;
+    distance_ -= (float)sin(rotation_y_)*modifier;
+    SetView();
+}
+
+void Camera::MoveZ(double modifier){
+    pan_x_ -= (float)sin(rotation_y_)*modifier;
+    distance_ -= (float)cos(rotation_y_)*modifier;
+    pan_y_ -= (float)sin(rotation_x_)*modifier;
+    SetView();
+}
+
+void Camera::MoveY(double modifier){
+    pan_y_ += modifier;
+    SetView();
+}
+
+void Camera::RotateX(double modifier) {
+  rotation_x_ += AngleIncrement * modifier * 4;
+}
+
+void Camera::RotateY(double modifier) {
+  rotation_y_ += AngleIncrement * modifier * 3;
+}
+
+void Camera::activateMuseumCamera()
+{
+    museumOn = true;
 }
 
 

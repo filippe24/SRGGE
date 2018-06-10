@@ -155,11 +155,12 @@ void ex5::paintGL()
 
 
                     //serve un'altra translazione per mettere i conigli al centro della tile!!
+                    float onTheGround = -(mesh1->min_[1]);
+                    float sf = scalingFactor;
 
-                    Eigen::Affine3f t2(Eigen::Translation3f(Eigen::Vector3f((tileDimension/2),0,(tileDimension/2))));
+                    Eigen::Affine3f t2(Eigen::Translation3f(Eigen::Vector3f((tileDimension/2), sf*onTheGround , (tileDimension/2))));
                     Eigen::Matrix4f translatonModel = t2.matrix();
 
-                    float sf = scalingFactor;
                     Eigen::Matrix4f S;
                     S << sf, 0 , 0 , 0,
                          0 , sf, 0 , 0,
@@ -169,6 +170,8 @@ void ex5::paintGL()
                     Eigen::Matrix4f scaledModel = model*translatonModel*S;
                     GLuint scaled_model_location = glGetUniformLocation(gShaderID,"u_model");
                     glUniformMatrix4fv(scaled_model_location, 1, GL_FALSE, scaledModel.data());
+
+                    glUniform3f( color_location, 1.0,1.0,1.0);
 
 
                     //RENDER MODEL
@@ -578,6 +581,7 @@ void ex5::startMuseum()
     initializeWorld();
     LoadModel(QString("/home/al/Downloads/bunny.ply"));
     startPrinting = true;
+    camera_.activateMuseumCamera();
     initVertexBuffer();
     paintGL();
 }
@@ -606,15 +610,14 @@ bool ex5::LoadModel(QString filename) {
         std::cout << "LoadModel : creata mesh con vertici:" << mesh1->vertices_.size() << " faccie:" << mesh1->faces_.size() << " normals:" <<mesh1->normals_.size() <<std::endl;
 
         float x_dim_mesh = mesh1->max_[0] - mesh1->min_[0];
-        float z_dim_mesh = mesh1->max_[0] - mesh1->min_[0];
-        std::cout << "LoadModel : dimensione x:" << x_dim_mesh << " e y:"<< z_dim_mesh  <<std::endl;
+        float z_dim_mesh = mesh1->max_[2] - mesh1->min_[2];
+        std::cout << "LoadModel : dimensione x:" << x_dim_mesh << " e z:"<< z_dim_mesh  <<std::endl;
         float maxDim;
         if(x_dim_mesh < z_dim_mesh)
             maxDim = z_dim_mesh;
         else
             maxDim = x_dim_mesh;
         scalingFactor = (tileDimension - (tileDimension/3))/maxDim;
-
 
 //      mesh1.reset(mesh1.release());
 //      camera_.UpdateModel(mesh1->min_, mesh1->max_);

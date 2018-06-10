@@ -26,9 +26,14 @@ public:
 
 
     void generateMeshes();
+    void computeLevels();
+    void uploadNumTotalFaces();
+    float computeCost(int i, int j);
 
 
     std::vector<std::vector<int>>     levels;
+    int oldLevel;
+    int numTotalFaces = 0;
 
     std::vector<std::vector<float>>   vertices;
     std::vector<std::vector<float>>   normals;

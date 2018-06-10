@@ -83,6 +83,7 @@ void ex4::paintGL()
 
         float size=2*mesh_->max_[0];
 
+        computeLevels();
 
         for(int i =0; i<copies; i++){
 
@@ -104,42 +105,47 @@ void ex4::paintGL()
 
                 GLuint color_location = glGetUniformLocation(gShaderID,"in_color");
 
-
                 //RENDER MODEL
-//                glUniform3f( color_location, 1.0,0.0,1.0);
-//                glBindVertexArray(vao);
-//                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
-//                glDrawElements(GL_TRIANGLES,mesh_->faces_.size(),GL_UNSIGNED_INT,0);
-//                glBindVertexArray(0);
-
-//                glUniform3f( color_location, 0.0,1.0,1.0);
-//                glBindVertexArray(vao0);
-//                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex0);
-//                glDrawElements(GL_TRIANGLES,faces[0].size(),GL_UNSIGNED_INT,0);
-//                glBindVertexArray(0);
-
-//                glUniform3f( color_location, 0.0,0.0,1.0);
-//                glBindVertexArray(vao1);
-//                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex1);
-//                glDrawElements(GL_TRIANGLES,faces[1].size(),GL_UNSIGNED_INT,0);
-//                glBindVertexArray(0);
-
-//                glUniform3f( color_location, 1.0,0.0,0.0);
-//                glBindVertexArray(vao2);
-//                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex2);
-//                glDrawElements(GL_TRIANGLES,faces[2].size(),GL_UNSIGNED_INT,0);
-//                glBindVertexArray(0);
-
-                glUniform3f( color_location, 0.0,1.0,0.0);
-                glBindVertexArray(vao3);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex3);
-                glDrawElements(GL_TRIANGLES,faces[3].size(),GL_UNSIGNED_INT,0);
-                glBindVertexArray(0);
-
-
-
-
-
+                if(levels[i][j] == 0)
+                {
+                    glUniform3f( color_location, 0.0,1.0,1.0);
+                    glBindVertexArray(vao0);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex0);
+                    glDrawElements(GL_TRIANGLES,faces[0].size(),GL_UNSIGNED_INT,0);
+                    glBindVertexArray(0);
+                }
+                else if(levels[i][j] == 1)
+                {
+                    glUniform3f( color_location, 0.0,0.0,1.0);
+                    glBindVertexArray(vao1);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex1);
+                    glDrawElements(GL_TRIANGLES,faces[1].size(),GL_UNSIGNED_INT,0);
+                    glBindVertexArray(0);
+                }
+                else if(levels[i][j] == 2)
+                {
+                    glUniform3f( color_location, 1.0,0.0,0.0);
+                    glBindVertexArray(vao2);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex2);
+                    glDrawElements(GL_TRIANGLES,faces[2].size(),GL_UNSIGNED_INT,0);
+                    glBindVertexArray(0);
+                }
+                else if(levels[i][j] == 3)
+                {
+                    glUniform3f( color_location, 0.0,1.0,0.0);
+                    glBindVertexArray(vao3);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex3);
+                    glDrawElements(GL_TRIANGLES,faces[3].size(),GL_UNSIGNED_INT,0);
+                    glBindVertexArray(0);
+                }
+                else if(levels[i][j] == 4)
+                {
+                    glUniform3f( color_location, 1.0,1.0,1.0);
+                    glBindVertexArray(vao);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
+                    glDrawElements(GL_TRIANGLES,mesh_->faces_.size(),GL_UNSIGNED_INT,0);
+                    glBindVertexArray(0);
+                }
                 //Reset ModelView
                 model=camera_.SetModel();
 
@@ -176,6 +182,11 @@ void ex4::generateMeshes()
     normals.clear();
     faces.clear();
 
+    level = 4;
+    vertexClustering();
+    vertices.push_back(new_vertices);
+    normals.push_back(new_normals);
+    faces.push_back(new_faces);
     level = 8;
     vertexClustering();
     vertices.push_back(new_vertices);
@@ -191,16 +202,140 @@ void ex4::generateMeshes()
     vertices.push_back(new_vertices);
     normals.push_back(new_normals);
     faces.push_back(new_faces);
-    level = 64;
-    vertexClustering();
-    vertices.push_back(new_vertices);
-    normals.push_back(new_normals);
-    faces.push_back(new_faces);
+
+}
 
 
+float ex4::computeCost(int i, int j)
+{
+
+    float size=2*mesh_->max_[0];
+
+    Eigen::Matrix4f view = camera_.SetView();
+    Eigen::Matrix4f model = camera_.SetModel();
+
+    Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f((-copies/2*size)+2*size*float(i),0,(-copies/2*size)+2*size*float(j))));
+    Eigen::Matrix4f m = t.matrix();
+    model = model * m;
+
+    Eigen::Vector3f diagonal = mesh_->max_ - mesh_->min_;
+    Eigen::Vector3f center = diagonal/2;
+
+    Eigen::Vector4f viewCenter = view*model*Eigen::Vector4f(center[0],center[1],center[2],1.0);
+    Eigen::Vector3f distance(viewCenter[0],viewCenter[1],viewCenter[2]);
+
+    //normalization
+    float d = diagonal.norm();
+    float D = distance.norm();
+
+    int L = levels[i][j];
+
+    //approssimate area of each triangle
+    float a1 = d/(pow(2,L)*D);
+    float a2 = 0;
+    if(L-1>=0)
+    {
+        //projected area on the screen
+        a2 = d/(pow(2,(L-1))*D);
+    }
+    std::cout << " cost position i:" << i<< " , j:"<<j<< "  distance D ="<<D<< "   diagonal:"<<d<< "   value at level:"<<L<< "  :" << a1 << std::endl;
+
+    std::cout <<" area of each triangle:" << a1 << "  , projected area on the screen:" << a2 << std::endl;
+
+    return (a2-a1);
+}
+
+
+
+void ex4::computeLevels()
+{
+    //    int face0 = faces[0].size()/3;
+    //    int face1 = faces[1].size()/3;
+    //    int face2 = faces[2].size()/3;
+    //    int face3 = faces[3].size()/3;
+    //    int face4 = mesh_->faces_.size()/3;
+
+    levels.clear();
+    for (int i = 0; i<copies; i++)
+    {
+        std::vector<int> column;
+
+        for(int j = 0; j<copies; j++)
+        {
+            column.push_back(4);
+        }
+        levels.push_back(column);
+    }
+    uploadNumTotalFaces();
+
+    bool foundMin = true;
+    while( numTotalFaces > 1000000 && foundMin == true )
+    {
+        foundMin = false;
+        int min_i = 0;
+        int min_j = 0;
+        float min_cost = computeCost(0,0);
+
+        for(int i = 0; i < copies; i++)
+        {
+            for(int j = 0; j < copies; j++)
+            {
+
+                float temp_cost = computeCost(i,j);
+                if(temp_cost <= min_cost)
+                {
+                    if(levels[i][j] != 0)
+                    {
+                        min_cost = temp_cost;
+                        min_i = i;
+                        min_j = j;
+                    }
+                    foundMin = true;
+                }
+            }
+        }
+
+
+        if(levels[min_i][min_j] != 0 && foundMin == true)
+        {
+//            std::cout << "level updated ....  old level:" << levels[min_i][min_j] << "   in position i:" << min_i << " j:" << min_j << std::endl;
+            levels[min_i][min_j] = levels[min_i][min_j] - 1;
+            uploadNumTotalFaces();
+//            std::cout << "          to:" << levels[min_i][min_j] << std::endl;
+
+        }
+
+
+
+    }
 
 
 }
+
+void ex4::uploadNumTotalFaces()
+{
+    int tot = 0;
+
+    for(int i = 0; i < copies; i++)
+    {
+        for(int j = 0; j < copies; j++)
+        {
+            int lv = levels[i][j];
+            if(lv >= 0 && lv <=3)
+                tot = tot + faces[lv].size()/3;
+            else if(lv == 4)
+            {
+                tot = tot + mesh_->faces_.size()/3;
+            }
+            else
+                std::cerr<< " level out of range 0..4 level:" << lv <<std::endl;
+        }
+    }
+
+    numTotalFaces = tot;
+
+}
+
 
 
 void ex4::initVertexBuffer()
