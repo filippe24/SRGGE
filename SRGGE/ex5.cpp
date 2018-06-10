@@ -77,8 +77,6 @@ void ex5::paintGL()
         {
             for(uint j = 0; j<world[0].size(); j++)
             {
-                std::cout <<"paintGL: i:"<<i <<"  j:"<<j << std::endl;
-
 
                 //Translation
                 Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-tileDimension*float(i),-1,-tileDimension*float(j))));
@@ -727,9 +725,13 @@ void ex5::initVertexBuffer()
 
 QGroupBox* ex5::controlPanel()
 {
-    // init group box
-    QGroupBox *groupBox = Viewer1::controlPanel();
+    QGroupBox *groupBox = new QGroupBox("Menu");
     groupBox->setStyleSheet(GroupBoxStyle);
+    QGridLayout *layout = new QGridLayout;
+    groupBox->setLayout(layout);
+    // init group box
+//    QGroupBox *groupBox = Viewer1::controlPanel();
+//    groupBox->setStyleSheet(GroupBoxStyle);
 
     QFrame* line = new QFrame();
     line->setFrameShape(QFrame::HLine);
@@ -742,40 +744,40 @@ QGroupBox* ex5::controlPanel()
     print_fps = new QLabel(QString::number(0));
 
     //Selection number of copies
-    QLabel *title_copies = new QLabel("Number of copies:");
-    QSpinBox *num_copies = new QSpinBox();
-    num_copies -> setMinimum(1);
+//    QLabel *title_copies = new QLabel("Number of copies:");
+//    QSpinBox *num_copies = new QSpinBox();
+//    num_copies -> setMinimum(1);
 
 
-    QPushButton *initializeMuseum = new QPushButton("PUSH");
+    QPushButton *initializeMuseum = new QPushButton("START MUSEUM");
 
-    auto layout = dynamic_cast<QGridLayout*>(groupBox->layout());
+//    auto layout = dynamic_cast<QGridLayout*>(groupBox->layout());
     int row = layout->rowCount() + 1;
 
-    connect(num_copies, SIGNAL(valueChanged(int)),this,SLOT(setNumberCopies(int)));
+//    connect(num_copies, SIGNAL(valueChanged(int)),this,SLOT(setNumberCopies(int)));
     connect(this,SIGNAL(SetFramerate(QString)),print_fps,SLOT(setText(QString)));
     connect(initializeMuseum, SIGNAL(clicked()), this, SLOT(startMuseum()));
 
 
     row++;
-    layout->addWidget(initializeMuseum,0,1);
-    row++;
-    layout->addWidget(line,row,0, 1 ,layout->columnCount());
+    layout->addWidget(initializeMuseum,0,0);
+//    row++;
+//    layout->addWidget(line,row,0, 1 ,layout->columnCount());
     row++;
 
     layout->addWidget(title_fps,row,0);
     layout->addWidget(print_fps,row,1);
 
-    row++;
-    layout->addWidget(line1,row,0, 1 ,layout->columnCount());
-    row++;
+//    row++;
+//    layout->addWidget(line1,row,0, 1 ,layout->columnCount());
+//    row++;
 
-    layout->addWidget(title_copies,row,0);
-    layout->addWidget(num_copies,row,1);
+//    layout->addWidget(title_copies,row,0);
+//    layout->addWidget(num_copies,row,1);
 
-    row++;
-    layout->addWidget(line2,row,0, 1 ,layout->columnCount());
-    row++;
+//    row++;
+//    layout->addWidget(line2,row,0, 1 ,layout->columnCount());
+//    row++;
 
 
     return(groupBox);
