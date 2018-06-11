@@ -48,7 +48,8 @@ HEADERS +=	MainWindow.h		\
                 SRGGE/ex3.h \
                 SRGGE/ex4.h \
                 SRGGE/ex5.h \
-                SRGGE/ex6.h
+                SRGGE/ex6.h \
+    Helpers/visibility.h
 		
 SOURCES +=	main.cpp		\ 
 		MainWindow.cpp 		\
@@ -67,7 +68,8 @@ SOURCES +=	main.cpp		\
                 SRGGE/ex3.cpp \
                 SRGGE/ex4.cpp \
                 SRGGE/ex5.cpp \
-                SRGGE/ex6.cpp
+                SRGGE/ex6.cpp \
+    Helpers/visibility.cpp
 
 
 DISTFILES += \

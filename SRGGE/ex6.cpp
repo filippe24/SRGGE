@@ -5,6 +5,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "time.h"
 
+#include "Helpers/visibility.h"
+
 ex6::ex6(const QGLFormat &glf, QWidget *parent) : Viewer1(glf, parent)
 {
     // init vars
@@ -784,8 +786,13 @@ QGroupBox* ex6::controlPanel()
 
 void ex6::computeVisibility()
 {
+    visibility *vs;
+    vs = new visibility();
+
     if(museumIsInitialized)
     {
+
+        vs->computeVisibility(world, 100);
 
     }
     else
@@ -793,6 +800,7 @@ void ex6::computeVisibility()
         QMessageBox msgBox;
         msgBox.setText(" you should initialize the museum first");
         msgBox.exec();
+
 
     }
 }

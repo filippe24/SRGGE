@@ -66,7 +66,8 @@ SOURCES       = main.cpp \
 		SRGGE/ex3.cpp \
 		SRGGE/ex4.cpp \
 		SRGGE/ex5.cpp \
-		SRGGE/ex6.cpp release/moc_MainWindow.cpp \
+		SRGGE/ex6.cpp \
+		Helpers/visibility.cpp release/moc_MainWindow.cpp \
 		release/moc_dummy.cpp \
 		release/moc_Viewer1.cpp \
 		release/moc_ssao_viewer.cpp \
@@ -95,6 +96,7 @@ OBJECTS       = release/main.o \
 		release/ex4.o \
 		release/ex5.o \
 		release/ex6.o \
+		release/visibility.o \
 		release/moc_MainWindow.o \
 		release/moc_dummy.o \
 		release/moc_Viewer1.o \
@@ -348,7 +350,8 @@ DIST          = shaders/ssao_geom.frag \
 		SRGGE/ex3.h \
 		SRGGE/ex4.h \
 		SRGGE/ex5.h \
-		SRGGE/ex6.h main.cpp \
+		SRGGE/ex6.h \
+		Helpers/visibility.h main.cpp \
 		MainWindow.cpp \
 		HW.cpp \
 		dummy.cpp \
@@ -365,7 +368,8 @@ DIST          = shaders/ssao_geom.frag \
 		SRGGE/ex3.cpp \
 		SRGGE/ex4.cpp \
 		SRGGE/ex5.cpp \
-		SRGGE/ex6.cpp
+		SRGGE/ex6.cpp \
+		Helpers/visibility.cpp
 QMAKE_TARGET  = ViewerPro
 DESTDIR       = 
 TARGET        = ViewerPro
@@ -392,8 +396,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/qt/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents MainWindow.h HW.h dummy.h camera/Camera.h Helpers/mesh_io.h Helpers/triangle_mesh.h FRR/Viewer1.h Helpers/mesh_importer.h Helpers/shader.h FRR/ssao_viewer.h FRR/separable.h SRGGE/ex1.h SRGGE/ex2.h Helpers/octree.h SRGGE/ex3.h SRGGE/ex4.h SRGGE/ex5.h SRGGE/ex6.h $(DISTDIR)/
-	$(COPY_FILE) --parents main.cpp MainWindow.cpp HW.cpp dummy.cpp camera/Camera.cpp Helpers/mesh_io.cc Helpers/triangle_mesh.cc FRR/Viewer1.cpp Helpers/mesh_importer.cpp FRR/ssao_viewer.cpp FRR/separable.cpp SRGGE/ex1.cpp SRGGE/ex2.cpp Helpers/octree.cpp SRGGE/ex3.cpp SRGGE/ex4.cpp SRGGE/ex5.cpp SRGGE/ex6.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents MainWindow.h HW.h dummy.h camera/Camera.h Helpers/mesh_io.h Helpers/triangle_mesh.h FRR/Viewer1.h Helpers/mesh_importer.h Helpers/shader.h FRR/ssao_viewer.h FRR/separable.h SRGGE/ex1.h SRGGE/ex2.h Helpers/octree.h SRGGE/ex3.h SRGGE/ex4.h SRGGE/ex5.h SRGGE/ex6.h Helpers/visibility.h $(DISTDIR)/
+	$(COPY_FILE) --parents main.cpp MainWindow.cpp HW.cpp dummy.cpp camera/Camera.cpp Helpers/mesh_io.cc Helpers/triangle_mesh.cc FRR/Viewer1.cpp Helpers/mesh_importer.cpp FRR/ssao_viewer.cpp FRR/separable.cpp SRGGE/ex1.cpp SRGGE/ex2.cpp Helpers/octree.cpp SRGGE/ex3.cpp SRGGE/ex4.cpp SRGGE/ex5.cpp SRGGE/ex6.cpp Helpers/visibility.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -12404,8 +12408,12 @@ release/ex6.o: SRGGE/ex6.cpp SRGGE/ex6.h \
 		/usr/include/qt/QtGui/QMouseEvent \
 		camera/Camera.h \
 		Helpers/mesh_importer.h \
-		Helpers/shader.h
+		Helpers/shader.h \
+		Helpers/visibility.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release/ex6.o SRGGE/ex6.cpp
+
+release/visibility.o: Helpers/visibility.cpp Helpers/visibility.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release/visibility.o Helpers/visibility.cpp
 
 release/moc_MainWindow.o: release/moc_MainWindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release/moc_MainWindow.o release/moc_MainWindow.cpp
