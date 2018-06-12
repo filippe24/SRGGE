@@ -83,7 +83,7 @@ Eigen::Matrix4f Camera::SetView() const {
 
 
   const Eigen::Affine3f cameraTranslation(
-      Eigen::Translation3f(Eigen::Vector3f(pan_x_, 0, -distance_)));
+      Eigen::Translation3f(Eigen::Vector3f(pan_x_, camera_y, -distance_)));
   const Eigen::Affine3f cameraRotationA(Eigen::AngleAxisf(rotation_x_, hra));
   const Eigen::Affine3f cameraRotationB(Eigen::AngleAxisf(rotation_y_, vra));
 
@@ -229,7 +229,7 @@ void Camera::MoveZ(double modifier){
 }
 
 void Camera::MoveY(double modifier){
-    pan_y_ += modifier;
+    camera_y += modifier;
     SetView();
 }
 
@@ -244,6 +244,12 @@ void Camera::RotateY(double modifier) {
 void Camera::activateMuseumCamera()
 {
     museumOn = true;
+}
+
+std::vector<float> Camera::getCameraPosition()
+{
+    std::vector<float> pos = {(float)pan_x_, (float)camera_y, (float)-distance_};
+    return pos;
 }
 
 

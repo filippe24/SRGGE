@@ -2,6 +2,8 @@
 #define CAMERA_H_
 
 #include <eigen3/Eigen/Geometry>
+#include <vector>
+
 
 
 namespace data_visualization {
@@ -316,9 +318,12 @@ class Camera {
   double cam_rotation_x_;
   double cam_rotation_y_;
 
+  double camera_y;
+
   bool museumOn = false;
 
   void activateMuseumCamera();
+  std::vector<float> getCameraPosition();
 
 
 };

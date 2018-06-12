@@ -14,6 +14,8 @@
 
 
 #include "FRR/Viewer1.h"
+#include "Helpers/visibility.h"
+
 
 class ex6 : public Viewer1
 {
@@ -25,6 +27,8 @@ public:
     QGroupBox*  controlPanel();
 
     bool            museumIsInitialized = false;
+    bool            visibilityIsComputed = false;
+    visibility      *vs;
 
     bool            openFile(const std::string &filename);
     bool            isInterior( int i, int j);

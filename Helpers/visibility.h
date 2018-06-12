@@ -15,8 +15,15 @@ private:
     //for each cell it store the list of visibility cells
     std::vector<std::vector<std::vector<int>>> visibilityMatrix;
 
+    //ray casting 2
+    void superRayCasting(int x1, int y1, int x2, int y2);
+    void addPoint(int x, int y);
+    std::vector<int> visibility_set;
+    bool last_point;
+    bool inside;
+    //ray casting 1
     void rayCasting(int x_a, int y_a, int x_b, int y_b);
-    void updateVisibility(std::vector<std::vector<int>> visible_set);
+    void updateVisibility(std::vector<int> visible_set);
 
 
 public:

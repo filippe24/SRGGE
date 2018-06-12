@@ -5,7 +5,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "time.h"
 
-#include "Helpers/visibility.h"
 
 ex6::ex6(const QGLFormat &glf, QWidget *parent) : Viewer1(glf, parent)
 {
@@ -75,132 +74,276 @@ void ex6::paintGL()
 
         normal = normal.inverse().transpose();
 
-        for(uint i = 0; i<world.size(); i++)
+        std::vector<float> pos = camera_.getCameraPosition();
+        int pos_i = (( pos[0] + world.size()/tileDimension )/tileDimension) ;
+        int pos_j = (( pos[2] + world[0].size()/tileDimension )/tileDimension);
+        std::cout<< "PaintGl: ricevuta posizione camera  " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+        std::cout<< "PaintGl: calcolata cella attuale  " << pos_i << " " << pos_j << std::endl;
+
+        //case with visibility
+        if(visibilityIsComputed && (pos_i >= 0 && pos_i < world.size()) && (pos_j >= 0 && pos_j < world[0].size())  )
         {
-            for(uint j = 0; j<world[0].size(); j++)
+            std::vector<int> visibleCells = vs->getVisibilityOfCell(pos_i, pos_j);
+            std::cout<< "PaintGl: celle visibili da qui:  " << visibleCells.size()/2 << std::endl;
+            if(visibleCells.size() == 0)
+                std::cerr << " no visible cell from here " << std::endl;
+//            std::cout<< "PaintGl: rendering di celle visibili:  " << std::endl;
+
+            for(uint cel = 0; cel < (visibleCells.size() - 1) ; cel = cel +2 )
             {
+                    uint i = visibleCells[cel];
+                    uint j = visibleCells[cel+1];
 
-                //Translation
-                Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-tileDimension*float(i),-1,-tileDimension*float(j))));
-                Eigen::Matrix4f m = t.matrix();
-                model = model * m;
+//                    std::cout<< "PaintGl: rendering della cella : "<<cel<< "  in posizione "<< i << "  "<< j << "  questo visible set ha size =="<<visibleCells.size()<< std::endl;
 
-                //Rotation matrix of 90 degree on y axes to create z-aligned wall :)
-                Eigen::Vector3f w = Eigen::Vector3f(0,1,0); // rotation axis
-                Eigen::Vector3f c = Eigen::Vector3f(0,0,0); // center of rotation
-                Eigen::Affine3f A = Eigen::Translation3f(c) * Eigen::AngleAxisf(0.5*M_PI, w) * Eigen::Translation3f(-c);
+                    //Translation
+                    Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-tileDimension*float(i),-1,-tileDimension*float(j))));
+                    Eigen::Matrix4f m = t.matrix();
+                    model = model * m;
 
-                GLuint projection_location = glGetUniformLocation(gShaderID,"u_projection");
-                glUniformMatrix4fv(projection_location, 1, GL_FALSE, projection.data());
-                GLuint view_location = glGetUniformLocation(gShaderID,"u_view");
-                glUniformMatrix4fv(view_location, 1, GL_FALSE, view.data());
-                GLuint model_location = glGetUniformLocation(gShaderID,"u_model");
-                glUniformMatrix4fv(model_location, 1, GL_FALSE, model.data());
-                GLuint normal_matrix_location = glGetUniformLocation(gShaderID,"u_normal_matrix");
-                glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, normal.data());
+                    //Rotation matrix of 90 degree on y axes to create z-aligned wall :)
+                    Eigen::Vector3f w = Eigen::Vector3f(0,1,0); // rotation axis
+                    Eigen::Vector3f c = Eigen::Vector3f(0,0,0); // center of rotation
+                    Eigen::Affine3f A = Eigen::Translation3f(c) * Eigen::AngleAxisf(0.5*M_PI, w) * Eigen::Translation3f(-c);
 
-                GLuint color_location = glGetUniformLocation(gShaderID,"in_color");
-                glUniform3f( color_location, 1.0,1.0,1.0);
+                    GLuint projection_location = glGetUniformLocation(gShaderID,"u_projection");
+                    glUniformMatrix4fv(projection_location, 1, GL_FALSE, projection.data());
+                    GLuint view_location = glGetUniformLocation(gShaderID,"u_view");
+                    glUniformMatrix4fv(view_location, 1, GL_FALSE, view.data());
+                    GLuint model_location = glGetUniformLocation(gShaderID,"u_model");
+                    glUniformMatrix4fv(model_location, 1, GL_FALSE, model.data());
+                    GLuint normal_matrix_location = glGetUniformLocation(gShaderID,"u_normal_matrix");
+                    glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, normal.data());
 
-
-                //render ground interior=1 exterior=0
-                if(world[i][j] ==  0)
-                    glUniform3f( color_location, 0.2,0.6,0.0);
-                else if(world[i][j] == 1)
-                    glUniform3f( color_location, 0.3,0.0,0.0);
-                else if(world[i][j] == 2)
-                    glUniform3f( color_location, 0.7,0.0,0.0);
-                else
-                    glUniform3f( color_location, 0.8,0.0,0.0);
-
-                //render ground ground=0 wall=1
-//                if(!isInterior(i,j))
-//                    glUniform3f( color_location, 1.0,1.0,1.0);
-//                else if(isInterior(i,j))
-//                    glUniform3f( color_location, 0.3,0.0,0.0);
-//                else
-//                    glUniform3f( color_location, 0.3,0.3,0.0);
-//                if(world[i][j] == 2)
-//                    glUniform3f( color_location, 0.7,0.0,0.0);
+                    GLuint color_location = glGetUniformLocation(gShaderID,"in_color");
+                    glUniform3f( color_location, 1.0,1.0,1.0);
 
 
-                glBindVertexArray(vaoG);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexG);
-                glDrawElements(GL_TRIANGLES,ground_faces.size(),GL_UNSIGNED_INT,0);
-                glBindVertexArray(0);
+                    //render ground interior=1 exterior=0
+                    if(world[i][j] ==  0)
+                        glUniform3f( color_location, 0.2,0.6,0.0);
+                    else if(world[i][j] == 1)
+                        glUniform3f( color_location, 0.3,0.0,0.0);
+                    else if(world[i][j] == 2)
+                        glUniform3f( color_location, 0.7,0.0,0.0);
+                    else
+                        glUniform3f( color_location, 0.8,0.0,0.0);
 
-                //test-----
-//                isInterior(i,j);
-
-                //render x-aligned wall
-                if((i != (world.size()-1)) && ((world[i][j] == 1 && world[i+1][j] == 0) || (world[i][j] == 0 && world[i+1][j] == 1)) && (world[i][j] != 2) && (world[i+1][j] != 2))
-                {
-                    glUniform3f( color_location, 0.7,0.7,0.7);
-
-                    glBindVertexArray(vaoW);
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
-                    glDrawElements(GL_TRIANGLES,wall_faces.size(),GL_UNSIGNED_INT,0);
+                    glBindVertexArray(vaoG);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexG);
+                    glDrawElements(GL_TRIANGLES,ground_faces.size(),GL_UNSIGNED_INT,0);
                     glBindVertexArray(0);
 
-                }
-                //render z-aligned walls
-                if((j != (world[0].size()-1)) && ((world[i][j] == 1 && world[i][j+1] == 0) || (world[i][j] == 0 && world[i][j+1] == 1))  && (world[i][j] != 2) && (world[i][j+1] != 2))
-                {
-                    //uploading the model matrix with 90 degree rotation
-                    Eigen::Matrix4f rotatedModel = model*A.matrix();
-                    GLuint rotated_model_location = glGetUniformLocation(gShaderID,"u_model");
-                    glUniformMatrix4fv(rotated_model_location, 1, GL_FALSE, rotatedModel.data());
+                    //test-----
+    //                isInterior(i,j);
 
-                    glUniform3f( color_location, 0.7,0.7,0.7);
+                    //render x-aligned wall
+                    if((i != (world.size()-1)) && ((world[i][j] == 1 && world[i+1][j] == 0) || (world[i][j] == 0 && world[i+1][j] == 1)) && (world[i][j] != 2) && (world[i+1][j] != 2))
+                    {
+                        glUniform3f( color_location, 0.7,0.7,0.7);
 
-                    glBindVertexArray(vaoW);
-                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
-                    glDrawElements(GL_TRIANGLES,wall_faces.size(),GL_UNSIGNED_INT,0);
-                    glBindVertexArray(0);
-
-                }
-
-                //render the uploaded models
-                if(world[i][j] > 2)
-                {
-                    //index of the model and buffers
-                    int m = world[i][j]-3;
-
-                    if(meshes[m] != nullptr)
-                   {
-
-                        //serve un'altra translazione per mettere i conigli al centro della tile!!
-                        float onTheGround = -(meshes[m]->min_[1]);
-                        float sf = scalingFactors[m];
-
-                        Eigen::Affine3f t2(Eigen::Translation3f(Eigen::Vector3f((tileDimension/2), sf*onTheGround , (tileDimension/2))));
-                        Eigen::Matrix4f translatonModel = t2.matrix();
-
-                        Eigen::Matrix4f S;
-                        S << sf, 0 , 0 , 0,
-                             0 , sf, 0 , 0,
-                             0 , 0 , sf, 0,
-                             0 , 0 , 0 , 1;
-
-                        Eigen::Matrix4f scaledModel = model*translatonModel*S;
-                        GLuint scaled_model_location = glGetUniformLocation(gShaderID,"u_model");
-                        glUniformMatrix4fv(scaled_model_location, 1, GL_FALSE, scaledModel.data());
-
-                        glUniform3f( color_location, 1.0,1.0,1.0);
-
-                        //RENDER MODEL
-                        glBindVertexArray(vaoMs[m]);
-                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexMs[m]);
-                        glDrawElements(GL_TRIANGLES,meshes[m]->faces_.size(),GL_UNSIGNED_INT,0);
+                        glBindVertexArray(vaoW);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
+                        glDrawElements(GL_TRIANGLES,wall_faces.size(),GL_UNSIGNED_INT,0);
                         glBindVertexArray(0);
-                   }
-                }
+
+                    }
+                    //render z-aligned walls
+                    if((j != (world[0].size()-1)) && ((world[i][j] == 1 && world[i][j+1] == 0) || (world[i][j] == 0 && world[i][j+1] == 1))  && (world[i][j] != 2) && (world[i][j+1] != 2))
+                    {
+                        //uploading the model matrix with 90 degree rotation
+                        Eigen::Matrix4f rotatedModel = model*A.matrix();
+                        GLuint rotated_model_location = glGetUniformLocation(gShaderID,"u_model");
+                        glUniformMatrix4fv(rotated_model_location, 1, GL_FALSE, rotatedModel.data());
+
+                        glUniform3f( color_location, 0.7,0.7,0.7);
+
+                        glBindVertexArray(vaoW);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
+                        glDrawElements(GL_TRIANGLES,wall_faces.size(),GL_UNSIGNED_INT,0);
+                        glBindVertexArray(0);
+
+                    }
+
+                    //render the uploaded models
+                    if(world[i][j] > 2)
+                    {
+                        //index of the model and buffers
+                        int m = world[i][j]-3;
+
+                        if(meshes[m] != nullptr)
+                       {
+
+                            //serve un'altra translazione per mettere i conigli al centro della tile!!
+                            float onTheGround = -(meshes[m]->min_[1]);
+                            float sf = scalingFactors[m];
+
+                            Eigen::Affine3f t2(Eigen::Translation3f(Eigen::Vector3f((tileDimension/2), sf*onTheGround , (tileDimension/2))));
+                            Eigen::Matrix4f translatonModel = t2.matrix();
+
+                            Eigen::Matrix4f S;
+                            S << sf, 0 , 0 , 0,
+                                 0 , sf, 0 , 0,
+                                 0 , 0 , sf, 0,
+                                 0 , 0 , 0 , 1;
+
+                            Eigen::Matrix4f scaledModel = model*translatonModel*S;
+                            GLuint scaled_model_location = glGetUniformLocation(gShaderID,"u_model");
+                            glUniformMatrix4fv(scaled_model_location, 1, GL_FALSE, scaledModel.data());
+
+                            glUniform3f( color_location, 1.0,1.0,1.0);
+
+                            //RENDER MODEL
+                            glBindVertexArray(vaoMs[m]);
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexMs[m]);
+                            glDrawElements(GL_TRIANGLES,meshes[m]->faces_.size(),GL_UNSIGNED_INT,0);
+                            glBindVertexArray(0);
+                       }
+                    }
 
 
-                //Reset ModelView
-                model=camera_.SetModel();
+                    //Reset ModelView
+                    model=camera_.SetModel();
+
             }
         }
+
+
+
+
+
+        //case without visibility
+        else
+        {
+            for(uint i = 0; i<world.size(); i++)
+            {
+                for(uint j = 0; j<world[0].size(); j++)
+                {
+
+                    //Translation
+                    Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f(-tileDimension*float(i),-1,-tileDimension*float(j))));
+                    Eigen::Matrix4f m = t.matrix();
+                    model = model * m;
+
+                    //Rotation matrix of 90 degree on y axes to create z-aligned wall :)
+                    Eigen::Vector3f w = Eigen::Vector3f(0,1,0); // rotation axis
+                    Eigen::Vector3f c = Eigen::Vector3f(0,0,0); // center of rotation
+                    Eigen::Affine3f A = Eigen::Translation3f(c) * Eigen::AngleAxisf(0.5*M_PI, w) * Eigen::Translation3f(-c);
+
+                    GLuint projection_location = glGetUniformLocation(gShaderID,"u_projection");
+                    glUniformMatrix4fv(projection_location, 1, GL_FALSE, projection.data());
+                    GLuint view_location = glGetUniformLocation(gShaderID,"u_view");
+                    glUniformMatrix4fv(view_location, 1, GL_FALSE, view.data());
+                    GLuint model_location = glGetUniformLocation(gShaderID,"u_model");
+                    glUniformMatrix4fv(model_location, 1, GL_FALSE, model.data());
+                    GLuint normal_matrix_location = glGetUniformLocation(gShaderID,"u_normal_matrix");
+                    glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, normal.data());
+
+                    GLuint color_location = glGetUniformLocation(gShaderID,"in_color");
+                    glUniform3f( color_location, 1.0,1.0,1.0);
+
+
+                    //render ground interior=1 exterior=0
+                    if(world[i][j] ==  0)
+                        glUniform3f( color_location, 0.2,0.6,0.0);
+                    else if(world[i][j] == 1)
+                        glUniform3f( color_location, 0.3,0.0,0.0);
+                    else if(world[i][j] == 2)
+                        glUniform3f( color_location, 0.7,0.0,0.0);
+                    else
+                        glUniform3f( color_location, 0.8,0.0,0.0);
+
+                    //render ground ground=0 wall=1
+    //                if(!isInterior(i,j))
+    //                    glUniform3f( color_location, 1.0,1.0,1.0);
+    //                else if(isInterior(i,j))
+    //                    glUniform3f( color_location, 0.3,0.0,0.0);
+    //                else
+    //                    glUniform3f( color_location, 0.3,0.3,0.0);
+    //                if(world[i][j] == 2)
+    //                    glUniform3f( color_location, 0.7,0.0,0.0);
+
+
+                    glBindVertexArray(vaoG);
+                    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexG);
+                    glDrawElements(GL_TRIANGLES,ground_faces.size(),GL_UNSIGNED_INT,0);
+                    glBindVertexArray(0);
+
+                    //test-----
+    //                isInterior(i,j);
+
+                    //render x-aligned wall
+                    if((i != (world.size()-1)) && ((world[i][j] == 1 && world[i+1][j] == 0) || (world[i][j] == 0 && world[i+1][j] == 1)) && (world[i][j] != 2) && (world[i+1][j] != 2))
+                    {
+                        glUniform3f( color_location, 0.7,0.7,0.7);
+
+                        glBindVertexArray(vaoW);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
+                        glDrawElements(GL_TRIANGLES,wall_faces.size(),GL_UNSIGNED_INT,0);
+                        glBindVertexArray(0);
+
+                    }
+                    //render z-aligned walls
+                    if((j != (world[0].size()-1)) && ((world[i][j] == 1 && world[i][j+1] == 0) || (world[i][j] == 0 && world[i][j+1] == 1))  && (world[i][j] != 2) && (world[i][j+1] != 2))
+                    {
+                        //uploading the model matrix with 90 degree rotation
+                        Eigen::Matrix4f rotatedModel = model*A.matrix();
+                        GLuint rotated_model_location = glGetUniformLocation(gShaderID,"u_model");
+                        glUniformMatrix4fv(rotated_model_location, 1, GL_FALSE, rotatedModel.data());
+
+                        glUniform3f( color_location, 0.7,0.7,0.7);
+
+                        glBindVertexArray(vaoW);
+                        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexW);
+                        glDrawElements(GL_TRIANGLES,wall_faces.size(),GL_UNSIGNED_INT,0);
+                        glBindVertexArray(0);
+
+                    }
+
+                    //render the uploaded models
+                    if(world[i][j] > 2)
+                    {
+                        //index of the model and buffers
+                        int m = world[i][j]-3;
+
+                        if(meshes[m] != nullptr)
+                       {
+
+                            //serve un'altra translazione per mettere i conigli al centro della tile!!
+                            float onTheGround = -(meshes[m]->min_[1]);
+                            float sf = scalingFactors[m];
+
+                            Eigen::Affine3f t2(Eigen::Translation3f(Eigen::Vector3f((tileDimension/2), sf*onTheGround , (tileDimension/2))));
+                            Eigen::Matrix4f translatonModel = t2.matrix();
+
+                            Eigen::Matrix4f S;
+                            S << sf, 0 , 0 , 0,
+                                 0 , sf, 0 , 0,
+                                 0 , 0 , sf, 0,
+                                 0 , 0 , 0 , 1;
+
+                            Eigen::Matrix4f scaledModel = model*translatonModel*S;
+                            GLuint scaled_model_location = glGetUniformLocation(gShaderID,"u_model");
+                            glUniformMatrix4fv(scaled_model_location, 1, GL_FALSE, scaledModel.data());
+
+                            glUniform3f( color_location, 1.0,1.0,1.0);
+
+                            //RENDER MODEL
+                            glBindVertexArray(vaoMs[m]);
+                            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndexMs[m]);
+                            glDrawElements(GL_TRIANGLES,meshes[m]->faces_.size(),GL_UNSIGNED_INT,0);
+                            glBindVertexArray(0);
+                       }
+                    }
+
+
+                    //Reset ModelView
+                    model=camera_.SetModel();
+                }
+            }
+        }
+
+
 
         glUseProgram(0);
     }
@@ -786,13 +929,13 @@ QGroupBox* ex6::controlPanel()
 
 void ex6::computeVisibility()
 {
-    visibility *vs;
     vs = new visibility();
 
     if(museumIsInitialized)
     {
 
         vs->computeVisibility(world, 100);
+        visibilityIsComputed = true;
 
     }
     else
