@@ -12,7 +12,7 @@
 #include <memory>
 #include <QKeyEvent>
 #include <vector>
-#include "SRGGE/ex1.h"
+#include "SRGGE/ex2.h"
 #include <tuple>
 #include "Helpers/octree.h"
 
@@ -20,7 +20,7 @@
 
 
 
-class ex3: public ex1
+class ex3: public ex2
 {
     Q_OBJECT
 
@@ -30,15 +30,17 @@ public:
     void            initializeGL();
     void            initVertexBuffer();
 
-
     void vertexClustering();
     void octreeVertexClustering();
+
+    void quadricVertexClustering();
 
 
 
     int             level=2;
-    bool            LODsimpleON=false;
-    bool            octreeON=false;
+    bool            vertexClusteringActivate=false;
+    bool            octreeActivate=false;
+    bool            quadricActivate = false;
 
     int maxLevel = 100;
     int intervalLevel = 5;
@@ -46,7 +48,7 @@ public:
     bool            createdOctree = false;
     octree *oc;
 
-
+    std::vector<Eigen::Matrix4d> QMatrix;
     std::vector<float>      new_vertices;
     std::vector<int>        new_faces;
     std::vector<float>      new_normals;
@@ -61,10 +63,12 @@ signals:
 
 public slots:
     void setNumberlod(int);
-    void setOFF();
-    void setOnBasic();
-    void setOnOctree();
+    void deactivate();
+    void activateBasic();
+    void activateOctree();
     void createOctree();
+
+    void createQuadric();
 
 };
 

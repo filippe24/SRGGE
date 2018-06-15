@@ -37,8 +37,8 @@ public:
 
 
     int             level=2;
-    bool            LODsimpleON=false;
-    bool            octreeON=false;
+    bool            vertexClusteringActivate=false;
+    bool            octreeActivate=false;
 
     int maxLevel = 100;
     int intervalLevel = 5;
@@ -61,9 +61,9 @@ signals:
 
 public slots:
     void setNumberlod(int);
-    void setOFF();
-    void setOnBasic();
-    void setOnOctree();
+    void deactivate();
+    void activateBasic();
+    void activateOctree();
     void createOctree();
 
 };

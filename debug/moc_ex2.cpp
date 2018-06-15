@@ -22,7 +22,7 @@ QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_ex2_t {
     QByteArrayData data[9];
-    char stringdata0[82];
+    char stringdata0[92];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -36,14 +36,14 @@ QT_MOC_LITERAL(1, 4, 11), // "SetVertices"
 QT_MOC_LITERAL(2, 16, 0), // ""
 QT_MOC_LITERAL(3, 17, 8), // "SetFaces"
 QT_MOC_LITERAL(4, 26, 12), // "setNumberlod"
-QT_MOC_LITERAL(5, 39, 6), // "setOFF"
-QT_MOC_LITERAL(6, 46, 10), // "setOnBasic"
-QT_MOC_LITERAL(7, 57, 11), // "setOnOctree"
-QT_MOC_LITERAL(8, 69, 12) // "createOctree"
+QT_MOC_LITERAL(5, 39, 10), // "deactivate"
+QT_MOC_LITERAL(6, 50, 13), // "activateBasic"
+QT_MOC_LITERAL(7, 64, 14), // "activateOctree"
+QT_MOC_LITERAL(8, 79, 12) // "createOctree"
 
     },
     "ex2\0SetVertices\0\0SetFaces\0setNumberlod\0"
-    "setOFF\0setOnBasic\0setOnOctree\0"
+    "deactivate\0activateBasic\0activateOctree\0"
     "createOctree"
 };
 #undef QT_MOC_LITERAL
@@ -95,9 +95,9 @@ void ex2::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **
         case 0: _t->SetVertices((*reinterpret_cast< QString(*)>(_a[1]))); break;
         case 1: _t->SetFaces((*reinterpret_cast< QString(*)>(_a[1]))); break;
         case 2: _t->setNumberlod((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 3: _t->setOFF(); break;
-        case 4: _t->setOnBasic(); break;
-        case 5: _t->setOnOctree(); break;
+        case 3: _t->deactivate(); break;
+        case 4: _t->activateBasic(); break;
+        case 5: _t->activateOctree(); break;
         case 6: _t->createOctree(); break;
         default: ;
         }

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-
+//the basic structure of a node of the octree
 struct node
 {
   int idNode = 0;

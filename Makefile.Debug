@@ -4246,6 +4246,7 @@ debug/moc_ex3.cpp: /usr/include/qt/QtWidgets/QtWidgets \
 		/usr/include/qt/QtOpenGL/qglpixelbuffer.h \
 		/usr/include/qt/QtOpenGL/qtopenglversion.h \
 		/usr/include/qt/QtGui/QKeyEvent \
+		SRGGE/ex2.h \
 		SRGGE/ex1.h \
 		FRR/Viewer1.h \
 		HW.h \
@@ -5696,6 +5697,7 @@ debug/moc_ex6.cpp: /usr/include/qt/QtWidgets/QtWidgets \
 		camera/Camera.h \
 		Helpers/mesh_importer.h \
 		Helpers/shader.h \
+		Helpers/visibility.h \
 		SRGGE/ex6.h \
 		debug/moc_predefs.h \
 		/usr/bin/moc
@@ -6675,7 +6677,8 @@ debug/MainWindow.o: MainWindow.cpp MainWindow.h \
 		SRGGE/ex3.h \
 		SRGGE/ex4.h \
 		SRGGE/ex5.h \
-		SRGGE/ex6.h
+		SRGGE/ex6.h \
+		Helpers/visibility.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug/MainWindow.o MainWindow.cpp
 
 debug/HW.o: HW.cpp HW.h \
@@ -10965,6 +10968,7 @@ debug/ex3.o: SRGGE/ex3.cpp SRGGE/ex3.h \
 		/usr/include/qt/QtOpenGL/qglpixelbuffer.h \
 		/usr/include/qt/QtOpenGL/qtopenglversion.h \
 		/usr/include/qt/QtGui/QKeyEvent \
+		SRGGE/ex2.h \
 		SRGGE/ex1.h \
 		FRR/Viewer1.h \
 		HW.h \

@@ -87,7 +87,7 @@ void ComputeVertexNormals(const std::vector<float> &vertices,
 }  // namespace data_representation
 
 
-ex3::ex3(const QGLFormat &glf, QWidget *parent) : ex1(glf, parent)
+ex3::ex3(const QGLFormat &glf, QWidget *parent) : ex2(glf, parent)
 {
     setFocusPolicy(Qt::StrongFocus);
 }
@@ -179,7 +179,7 @@ void ex3::paintGL()
                 glBindVertexArray(vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
 
-                if(LODsimpleON)
+                if(vertexClusteringActivate)
                 {
                     glDrawElements(GL_TRIANGLES,new_faces.size(),GL_UNSIGNED_INT,0);
                 }
@@ -220,11 +220,8 @@ void ex3::paintGL()
 }
 
 
-
 void ex3::vertexClustering()
 {
-
-
     new_vertices.clear();
     new_faces.clear();
     new_normals.clear();
@@ -234,24 +231,19 @@ void ex3::vertexClustering()
     std::cout<< "selected level " << level << std::endl;
 
     //computing grid
-
     float xDimension = ((mesh_->max_[0]) - (mesh_->min_[0]));
     float yDimension = ((mesh_->max_[1]) - (mesh_->min_[1]));
     float zDimension = ((mesh_->max_[2]) - (mesh_->min_[2]));
 
     std::cout << " x dimension " << xDimension  << " y dimension " << yDimension << " z dimension " << zDimension << std::endl;
-
     int numVertici = (int) mesh_->vertices_.size()/3;
-
     int numCells = level*level*level;
-
 
     std::vector<std::vector<int>> griglia(numCells);
 
     float step_x = xDimension/level;
     float step_y = yDimension/level;
     float step_z = zDimension/level;
-
 
     //selecting the cell for each vertex
     for (int i = 0; i < numVertici; i++ )
@@ -262,14 +254,9 @@ void ex3::vertexClustering()
         float y_d = mesh_->vertices_[ver_i+1] - (mesh_->min_[1]);
         float z_d = mesh_->vertices_[ver_i+2] - (mesh_->min_[2]);
 
-
-
         int x = static_cast<int>(x_d/step_x);
         int y = static_cast<int>(y_d/step_y);
         int z = static_cast<int>(z_d/step_z);
-
-
-
 
         if(x == level) x-=1;
         if(y == level) y-=1;
@@ -288,7 +275,6 @@ void ex3::vertexClustering()
     int cella = 0;
     for (int i = 0; i < numCells ; i++ )
     {
-
         int num_ver_cell = griglia[i].size();
 
         float x_sum = 0;
@@ -303,7 +289,6 @@ void ex3::vertexClustering()
                 y_sum = y_sum + mesh_->vertices_[griglia[i][j]*3+1];
                 z_sum = z_sum + mesh_->vertices_[griglia[i][j]*3+2];
                 vert_cell[griglia[i][j]] = cella;
-
             }
 
             x_sum = x_sum/num_ver_cell;
@@ -325,7 +310,6 @@ void ex3::vertexClustering()
     for (int i=0; i< numFaces; i++)
     {
         //every triangle of the face
-//        int f_id = i*3;
         int ver_a = mesh_->faces_[3*i+0];
         int ver_b = mesh_->faces_[3*i+1];
         int ver_c = mesh_->faces_[3*i+2];
@@ -347,10 +331,6 @@ void ex3::vertexClustering()
     data_representation::ComputeVertexNormals(new_vertices,new_faces,&new_normals);
 
 }
-
-
-
-
 
 void ex3::octreeVertexClustering()
 {
@@ -457,6 +437,8 @@ void ex3::octreeVertexClustering()
 
         data_representation::ComputeVertexNormals(new_vertices,new_faces,&new_normals);
 
+        std::cout<<"numero vertici:"<< new_vertices.size()<<"  numero normals:"<<new_normals.size()<<"  numero faccie:"<<new_faces.size()<<std::endl;
+
     }
     else
     {
@@ -466,8 +448,6 @@ void ex3::octreeVertexClustering()
     }
 
 }
-
-
 
 void ex3::createOctree()
 {
@@ -493,12 +473,160 @@ void ex3::createOctree()
 }
 
 
+void ex3::createQuadric()
+{
+    vertexClusteringActivate = true;
+    octreeActivate = false;
+    quadricActivate = true;
+
+    QMatrix.clear();
+
+    for(int id=0; id < (int) mesh_->vertices_.size()/3; id++)
+    {
+         // Vertex v
+        Eigen::Vector3d v(mesh_->vertices_[id*3],mesh_->vertices_[id*3+1],mesh_->vertices_[id*3+2]);
+
+        Eigen::Vector3d normal(mesh_->normals_[id*3],mesh_->normals_[id*3+1],mesh_->normals_[id*3+2]);
+        Eigen::Vector4d pv(normal[0],normal[1],normal[2],-normal.dot(v));
+
+        Eigen::Matrix4d Qv = pv * pv.transpose();
+
+        QMatrix.push_back(Qv);
+    }
+
+    std::cout<< "createQuadric: quadricActivated boolean : " << quadricActivate << std::endl;
+
+    initVertexBuffer();
+    paintGL();
+
+}
+
+void ex3::quadricVertexClustering()
+{
+    new_vertices.clear();
+    new_faces.clear();
+    new_normals.clear();
+
+    float xDimension = ((mesh_->max_[0]) - (mesh_->min_[0]));
+    float yDimension = ((mesh_->max_[1]) - (mesh_->min_[1]));
+    float zDimension = ((mesh_->max_[2]) - (mesh_->min_[2]));
+
+    int numVertici = (int) mesh_->vertices_.size()/3;
+    int numCells = level*level*level;
+
+    std::vector<std::vector<int>> griglia(numCells);
+
+    float step_x = xDimension/level;
+    float step_y = yDimension/level;
+    float step_z = zDimension/level;
+
+
+    //selecting the cell for each vertex
+    for (int i = 0; i < numVertici; i++ )
+    {
+        int ver_i = i*3;
+
+        float x_d = mesh_->vertices_[ver_i+0] - (mesh_->min_[0]);
+        float y_d = mesh_->vertices_[ver_i+1] - (mesh_->min_[1]);
+        float z_d = mesh_->vertices_[ver_i+2] - (mesh_->min_[2]);
+
+
+
+        int x = static_cast<int>(x_d/step_x);
+        int y = static_cast<int>(y_d/step_y);
+        int z = static_cast<int>(z_d/step_z);
 
 
 
 
+        if(x == level) x-=1;
+        if(y == level) y-=1;
+        if(z == level) z-=1;
+
+        int grid_i = x + y*level + z*level*level;
+
+        griglia[grid_i].push_back(i);
+
+    }
+    std::vector<float> vert_cell(numVertici);
+
+    //computing the mean
+    int cella = 0;
+    for (int i = 0; i < numCells ; i++ )
+    {
+
+        int num_ver_cell = griglia[i].size();
+         Eigen::Matrix4d Q = Eigen::Matrix4d::Zero();
+
+        if(num_ver_cell != 0)
+        {
+            for(int j=0; j<num_ver_cell; j++ )
+            {
+
+                 Q = Q + QMatrix[griglia[i][j]];
+                vert_cell[griglia[i][j]] = cella;
+
+            }
+
+            //Compute the new vertex from the matrix
+            Q.row(3) << 0, 0, 0, 1;
+
+            Eigen::Matrix4d inverse;
+            bool invertible;
+            Q.computeInverseWithCheck(inverse,invertible,0.1);
+
+            Eigen::Vector4d new_V;
+
+            if(invertible){
+                new_V = inverse * Eigen::Vector4d(0,0,0,1);
+
+                //Add the new vertex to the list of new vertices
+                new_vertices.push_back(new_V[0]);
+                new_vertices.push_back(new_V[1]);
+                new_vertices.push_back(new_V[2]);
+
+            }
+
+            else
+            {
+                new_vertices.push_back(mesh_->vertices_[griglia[i][0]*3]);
+                new_vertices.push_back(mesh_->vertices_[griglia[i][0]*3+1]);
+                new_vertices.push_back(mesh_->vertices_[griglia[i][0]*3+2]);
+            }
+
+            cella = cella + 1;
+
+        }
+    }
 
 
+    //computing the faces
+    int numFaces = (int) mesh_->faces_.size()/3;
+    for (int i=0; i< numFaces; i++)
+    {
+        //every triangle of the face
+//        int f_id = i*3;
+        int ver_a = mesh_->faces_[3*i+0];
+        int ver_b = mesh_->faces_[3*i+1];
+        int ver_c = mesh_->faces_[3*i+2];
+
+        //get the id of the cell of the vertices
+        int id_a = vert_cell[ver_a];
+        int id_b = vert_cell[ver_b];
+        int id_c = vert_cell[ver_c];
+
+        if(!(id_a == id_b || id_a==id_c || id_b == id_c))
+        {
+            new_faces.push_back(id_a);
+            new_faces.push_back(id_b);
+            new_faces.push_back(id_c);
+
+        }
+    }
+
+    data_representation::ComputeVertexNormals(new_vertices,new_faces,&new_normals);
+
+}
 
 void ex3::initVertexBuffer()
 {
@@ -516,13 +644,12 @@ void ex3::initVertexBuffer()
     glGenBuffers(1,&vboIndex);
 
 
+    if(vertexClusteringActivate){
 
-    if(LODsimpleON){
-
-
-
-        if(octreeON)
+        if(octreeActivate)
             octreeVertexClustering();
+        else if(quadricActivate)
+            quadricVertexClustering();
         else
             vertexClustering();
 
@@ -565,25 +692,11 @@ void ex3::initVertexBuffer()
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,mesh_->faces_.size()* sizeof(int),&mesh_->faces_[0],GL_STATIC_DRAW);
 
-
     }
-
-
     glBindVertexArray(0);
 
 }
 
-//QPushButton *buttonReset = new QPushButton("Reset");
-//QPushButton *buttonQuit  = new QPushButton("Quit");
-
-//// init signal/slot connections
-//connect(buttonReset, SIGNAL(clicked()), this, SLOT(reset()));
-//connect(buttonQuit , SIGNAL(clicked()), this, SLOT(quit ()));
-
-//// assemble pushbuttons in horizontal layout
-//QHBoxLayout *buttonLayout = new QHBoxLayout;
-//buttonLayout->addWidget(buttonReset);
-//buttonLayout->addWidget(buttonQuit );
 QGroupBox* ex3::controlPanel()
 {
     // init group box
@@ -593,18 +706,20 @@ QGroupBox* ex3::controlPanel()
     QFrame* line = new QFrame();
     line->setFrameShape(QFrame::HLine);
 
-    //Unable LOD
-    QButtonGroup *buttonGroup = new QButtonGroup;
-
     QPushButton *buttonOctree = new QPushButton("Create Octree");
+
+    QButtonGroup *buttonGroup = new QButtonGroup;
 
     QRadioButton *OnNormal = new QRadioButton("Normal");
     QRadioButton *OnBasic = new QRadioButton("Vertex clustering");
     QRadioButton *OnOctree = new QRadioButton("Octree LOD");
+    QRadioButton *OnQuadric = new QRadioButton("Quadric LOD");
+
     OnNormal -> setChecked(true);
     buttonGroup -> addButton(OnNormal);
     buttonGroup -> addButton(OnBasic);
     buttonGroup -> addButton(OnOctree);
+    buttonGroup -> addButton(OnQuadric);
 
 
     //Selection level
@@ -631,9 +746,12 @@ QGroupBox* ex3::controlPanel()
     int row = layout->rowCount() + 1;
 
     connect(num_div, SIGNAL(valueChanged(int)),this,SLOT(setNumberlod(int)));
-    connect(OnNormal,SIGNAL(toggled(bool)),this,SLOT(setOFF()));
-    connect(OnBasic,SIGNAL(toggled(bool)),this,SLOT(setOnBasic()));
-    connect(OnOctree,SIGNAL(toggled(bool)),this,SLOT(setOnOctree()));
+    connect(OnNormal,SIGNAL(toggled(bool)),this,SLOT(deactivate()));
+    connect(OnBasic,SIGNAL(toggled(bool)),this,SLOT(activateBasic()));
+    connect(OnOctree,SIGNAL(toggled(bool)),this,SLOT(activateOctree()));
+
+    connect(OnQuadric,SIGNAL(toggled(bool)),this,SLOT(createQuadric()));
+
     connect(this,SIGNAL(SetVertices(QString)),v_count,SLOT(setText(QString)));
     connect(this,SIGNAL(SetFaces(QString)),f_count,SLOT(setText(QString)));
 
@@ -647,9 +765,10 @@ QGroupBox* ex3::controlPanel()
     layout->addWidget(line,row,0, 1 ,layout->columnCount());
     row++;
     layout->addWidget(OnNormal,row,0,1,2);
+    layout->addWidget(OnOctree,row,1);
     row++;
     layout->addWidget(OnBasic,row,0);
-    layout->addWidget(OnOctree,row,1);
+    layout->addWidget(OnQuadric,row,1);
     row++;
 
     row++;
@@ -675,8 +794,9 @@ QGroupBox* ex3::controlPanel()
 
 }
 
+
 void ex3::setNumberlod(int n){
-    if(LODsimpleON){
+    if(vertexClusteringActivate){
         level=n;
         initializeGL();
         initVertexBuffer();
@@ -684,25 +804,28 @@ void ex3::setNumberlod(int n){
     }
 }
 
-void ex3::setOFF(){
-    LODsimpleON=false;
-    octreeON=false;
+void ex3::deactivate(){
+    vertexClusteringActivate = false;
+    octreeActivate = false;
+    quadricActivate = false;
     initVertexBuffer();
     paintGL();
 }
 
-void ex3::setOnBasic(){
-    LODsimpleON=true;
-    octreeON=false;
+void ex3::activateBasic(){
+    vertexClusteringActivate=true;
+    octreeActivate=false;
+    quadricActivate = false;
     initVertexBuffer();
     paintGL();
 }
 
 
-void ex3::setOnOctree()
+void ex3::activateOctree()
 {
-    LODsimpleON=true;
-    octreeON=true;
+    vertexClusteringActivate=true;
+    octreeActivate=true;
+    quadricActivate = false;
     if(!createdOctree)
         createOctree();
     initVertexBuffer();

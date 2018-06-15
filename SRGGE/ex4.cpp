@@ -11,8 +11,6 @@
 // try differet levels for the meshes
 //implement the selection
 
-
-
 ex4::ex4(const QGLFormat &glf, QWidget *parent) : ex2(glf, parent)
 {
     // init vars
@@ -175,36 +173,6 @@ void ex4::paintGL()
 
 
 
-//generate vertices, normals and indices of all the levels of details
-void ex4::generateMeshes()
-{
-    vertices.clear();
-    normals.clear();
-    faces.clear();
-
-    level = 4;
-    vertexClustering();
-    vertices.push_back(new_vertices);
-    normals.push_back(new_normals);
-    faces.push_back(new_faces);
-    level = 8;
-    vertexClustering();
-    vertices.push_back(new_vertices);
-    normals.push_back(new_normals);
-    faces.push_back(new_faces);
-    level = 16;
-    vertexClustering();
-    vertices.push_back(new_vertices);
-    normals.push_back(new_normals);
-    faces.push_back(new_faces);
-    level = 32;
-    vertexClustering();
-    vertices.push_back(new_vertices);
-    normals.push_back(new_normals);
-    faces.push_back(new_faces);
-
-}
-
 
 float ex4::computeCost(int i, int j)
 {
@@ -249,12 +217,6 @@ float ex4::computeCost(int i, int j)
 
 void ex4::computeLevels()
 {
-    //    int face0 = faces[0].size()/3;
-    //    int face1 = faces[1].size()/3;
-    //    int face2 = faces[2].size()/3;
-    //    int face3 = faces[3].size()/3;
-    //    int face4 = mesh_->faces_.size()/3;
-
     levels.clear();
     for (int i = 0; i<copies; i++)
     {
@@ -349,9 +311,6 @@ void ex4::initVertexBuffer()
         std::cout << "initVertexBuffer:mesh initilization" << std::endl;
 
 
-
-
-
         //origianl mesh
         /*-----------------------*/
         glGenVertexArrays(1,&vao);
@@ -381,8 +340,32 @@ void ex4::initVertexBuffer()
         glBindVertexArray(0);
 
 
-        generateMeshes();
 
+        //generate the meshes and the different level of detail
+        vertices.clear();
+        normals.clear();
+        faces.clear();
+
+        level = 4;
+        vertexClustering();
+        vertices.push_back(new_vertices);
+        normals.push_back(new_normals);
+        faces.push_back(new_faces);
+        level = 8;
+        vertexClustering();
+        vertices.push_back(new_vertices);
+        normals.push_back(new_normals);
+        faces.push_back(new_faces);
+        level = 16;
+        vertexClustering();
+        vertices.push_back(new_vertices);
+        normals.push_back(new_normals);
+        faces.push_back(new_faces);
+        level = 32;
+        vertexClustering();
+        vertices.push_back(new_vertices);
+        normals.push_back(new_normals);
+        faces.push_back(new_faces);
 
         /*-------------------*/
         glGenVertexArrays(1,&vao0);

@@ -45,7 +45,8 @@ Camera::Camera()
       z_far_(0.0f),
       cam_rotation_x_(0.0f),
       cam_rotation_y_(0.0f),
-      museumOn(false) {}
+      museumOn(false),
+      camera_y(0.0f){}
 
 void Camera::SetViewport(double x, double y, double w, double h) {
   viewport_x_ = x;

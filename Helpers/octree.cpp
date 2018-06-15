@@ -39,6 +39,8 @@ octree::octree(float x_min, float x_max, float y_min, float y_max, float z_min, 
 }
 
 
+
+//set the depth of the tree for the level of detail exploration
 void octree::setLevel(int selectedDepth)
 {
     std::cout << "Selecting Level" << std::endl;
@@ -57,6 +59,8 @@ void octree::setLevel(int selectedDepth)
     std::cout << "----> created " << newIndexCounter << "new Vertices" << std::endl;
 }
 
+
+//explore the tree to a selected depth
 void octree::explore(node *nd, int selectedDepth)
 {
     if((nd->isTerminal) || (nd->depth == selectedDepth))
@@ -244,6 +248,8 @@ void octree::insertValue(std::vector<float> key, node *nd, int index)
 
 //    std::cout << "updated mean of node at depth "<< nd->depth << " with value " << nd->mean[0] << " " << nd->mean[1] << " " << nd->mean[2] << std::endl;
  }
+
+//create a node in the octree
 node* octree::createNode(node *dad, std::vector<float> key, int index)
 {
     node *new_node = new node;
@@ -308,6 +314,7 @@ void octree::computeDimension(node *nd, int x_i, int y_i, int z_i)
 }
 
 
+//compute the mean to store in each node
 void octree::computeMean(node* nd)
 {
 

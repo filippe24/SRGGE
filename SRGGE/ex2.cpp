@@ -10,6 +10,7 @@
 
 
 
+//Function to compute the normals of vertices
 namespace data_representation {
 
 namespace {
@@ -121,10 +122,7 @@ void ex2::initializeGL()
 
 void ex2::paintGL()
 {
-
-
-    // Render to our framebuffer
-    glViewport(0,0,width_,height_); // Render on the whole framebuffer
+    glViewport(0,0,width_,height_);
     glClearColor(1.0f,1.0f,1.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -175,7 +173,7 @@ void ex2::paintGL()
                 glBindVertexArray(vao);
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,vboIndex);
 
-                if(LODsimpleON)
+                if(vertexClusteringActivate)
                 {
                     glDrawElements(GL_TRIANGLES,new_faces.size(),GL_UNSIGNED_INT,0);
                 }
@@ -215,6 +213,11 @@ void ex2::paintGL()
 
 }
 
+
+
+
+
+//VERTEX CLASTERING WITH THE MEAN
 void ex2::vertexClustering()
 {
 
@@ -342,6 +345,11 @@ void ex2::vertexClustering()
 
 }
 
+
+
+
+//OCTREE VERTEX CLUSTERING
+//based on the octree created in the octree class
 void ex2::octreeVertexClustering()
 {
 
@@ -379,6 +387,8 @@ void ex2::octreeVertexClustering()
 
             }
         }
+
+        //add the new generated vertices
         for(uint i= 0; i<newGenVertices.size(); i++)
         {
             new_vertices.push_back(means[i][0]);
@@ -459,6 +469,8 @@ void ex2::octreeVertexClustering()
 
 }
 
+
+//FUNCTION TO CREATE AND POPULATE THE OCTREE
 void ex2::createOctree()
 {
     oc = NULL;
@@ -498,12 +510,9 @@ void ex2::initVertexBuffer()
     glGenBuffers(1,&vboIndex);
 
 
+    if(vertexClusteringActivate){
 
-    if(LODsimpleON){
-
-
-
-        if(octreeON)
+        if(octreeActivate)
             octreeVertexClustering();
         else
             vertexClustering();
@@ -567,11 +576,12 @@ QGroupBox* ex2::controlPanel()
 
     QPushButton *buttonOctree = new QPushButton("Create Octree");
 
-    //Unable LOD
     QButtonGroup *buttonGroup = new QButtonGroup;
+
     QRadioButton *OnNormal = new QRadioButton("Normal");
     QRadioButton *OnBasic = new QRadioButton("Vertex clustering");
     QRadioButton *OnOctree = new QRadioButton("Octree LOD");
+
     OnNormal -> setChecked(true);
     buttonGroup -> addButton(OnNormal);
     buttonGroup -> addButton(OnBasic);
@@ -609,9 +619,10 @@ QGroupBox* ex2::controlPanel()
     connect(num_div,SIGNAL(valueChanged(int)),in_val,SLOT(setValue(int)) );
 
     connect(num_div, SIGNAL(valueChanged(int)),this,SLOT(setNumberlod(int)));
-    connect(OnNormal,SIGNAL(toggled(bool)),this,SLOT(setOFF()));
-    connect(OnBasic,SIGNAL(toggled(bool)),this,SLOT(setOnBasic()));
-    connect(OnOctree,SIGNAL(toggled(bool)),this,SLOT(setOnOctree()));
+    connect(OnNormal,SIGNAL(toggled(bool)),this,SLOT(deactivate()));
+    connect(OnBasic,SIGNAL(toggled(bool)),this,SLOT(activateBasic()));
+    connect(OnOctree,SIGNAL(toggled(bool)),this,SLOT(activateOctree()));
+
     connect(this,SIGNAL(SetVertices(QString)),v_count,SLOT(setText(QString)));
     connect(this,SIGNAL(SetFaces(QString)),f_count,SLOT(setText(QString)));
 
@@ -655,8 +666,10 @@ QGroupBox* ex2::controlPanel()
 
 }
 
+
+//Function to set the level of detail
 void ex2::setNumberlod(int n){
-    if(LODsimpleON){
+    if(vertexClusteringActivate){
         level=n;
         initializeGL();
         initVertexBuffer();
@@ -664,25 +677,27 @@ void ex2::setNumberlod(int n){
     }
 }
 
-void ex2::setOFF(){
-    LODsimpleON=false;
-    octreeON=false;
+//function that deactivate the level of detail
+void ex2::deactivate(){
+    vertexClusteringActivate=false;
+    octreeActivate=false;
     initVertexBuffer();
     paintGL();
 }
 
-void ex2::setOnBasic(){
-    LODsimpleON=true;
-    octreeON=false;
+//faction to activate the basic vertex clustering
+void ex2::activateBasic(){
+    vertexClusteringActivate=true;
+    octreeActivate=false;
     initVertexBuffer();
     paintGL();
 }
 
-
-void ex2::setOnOctree()
+//function that activate that octree
+void ex2::activateOctree()
 {
-    LODsimpleON=true;
-    octreeON=true;
+    vertexClusteringActivate=true;
+    octreeActivate=true;
     if(!createdOctree)
         createOctree();
     initVertexBuffer();

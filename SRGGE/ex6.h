@@ -100,6 +100,10 @@ public slots:
 signals:
     void SetFramerate(QString);
 
+public slots:
+    void setNotSuper();
+    void setSuper();
+
 };
 
 

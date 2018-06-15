@@ -49,8 +49,7 @@ void ex6::initializeGL()
 void ex6::paintGL()
 {
 
-    // Render to our framebuffer
-    glViewport(0,0,width_,height_); // Render on the whole framebuffer
+    glViewport(0,0,width_,height_);
     glClearColor(1.0f,1.0f,1.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -75,10 +74,17 @@ void ex6::paintGL()
         normal = normal.inverse().transpose();
 
         std::vector<float> pos = camera_.getCameraPosition();
-        int pos_i = (( pos[0] + world.size()/tileDimension )/tileDimension) ;
-        int pos_j = (( pos[2] + world[0].size()/tileDimension )/tileDimension);
+//        int pos_i = (( pos[0] + world.size()/tileDimension )/tileDimension) ;
+//        int pos_j = (( pos[2] + world[0].size()/tileDimension )/tileDimension);
+        int pos_i = static_cast<int>(( pos[0])/tileDimension);
+        int pos_j = static_cast<int>(( pos[2])/tileDimension);
         std::cout<< "PaintGl: ricevuta posizione camera  " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
         std::cout<< "PaintGl: calcolata cella attuale  " << pos_i << " " << pos_j << std::endl;
+
+
+//        int posI = static_cast<int>(( pos[0])/tileDimension);
+//        int posJ = static_cast<int>(( pos[2])/tileDimension);
+//        std::cout<< "PaintGl: calcolata cella attuale  " << posI << " " << posJ << std::endl;
 
         //case with visibility
         if(visibilityIsComputed && (pos_i >= 0 && pos_i < world.size()) && (pos_j >= 0 && pos_j < world[0].size())  )
@@ -362,7 +368,7 @@ void ex6::paintGL()
 
 }
 
-
+//NOT USED
 //check if a ground is interior or not ( only if the maps are ground=0, walls= 1)
 bool ex6::isInterior( int i, int j)
 {
@@ -894,14 +900,22 @@ QGroupBox* ex6::controlPanel()
 //    num_copies -> setMinimum(1);
 
 
-    QPushButton *initializeMuseum = new QPushButton("INIT MUSEUM");
+    QPushButton *initializeMuseum = new QPushButton("SELECT MUSEUM");
     QPushButton *compVisibility = new QPushButton("COMPUTE VISIBILITY");
     QPushButton *startMuseum = new QPushButton("START MUSEUM");
+
+    QButtonGroup *buttonGroup = new QButtonGroup;
+
+    QRadioButton *Normal = new QRadioButton("Normal");
+    QRadioButton *Super = new QRadioButton("Supercover");
+
+    Normal -> setChecked(true);
+    buttonGroup -> addButton(Normal);
+    buttonGroup -> addButton(Super);
 
 //    auto layout = dynamic_cast<QGridLayout*>(groupBox->layout());
     int row = layout->rowCount() + 1;
 
-//    connect(num_copies, SIGNAL(valueChanged(int)),this,SLOT(setNumberCopies(int)));
     connect(this,SIGNAL(SetFramerate(QString)),print_fps,SLOT(setText(QString)));
     connect(initializeMuseum, SIGNAL(clicked()), this, SLOT(initializeWorld()));
 
@@ -909,6 +923,8 @@ QGroupBox* ex6::controlPanel()
 
     connect(startMuseum, SIGNAL(clicked()), this, SLOT(startMuseum()));
 
+    connect(Normal,SIGNAL(toggled(bool)),this,SLOT(setNotSuper()));
+    connect(Super,SIGNAL(toggled(bool)),this,SLOT(setSuper()));
 
     row++;
     layout->addWidget(initializeMuseum,0,0);
@@ -918,13 +934,19 @@ QGroupBox* ex6::controlPanel()
     row++;
     layout->addWidget(startMuseum,row,0);
     row++;
+    layout->addWidget(Normal,row,0,1,2);
+    layout->addWidget(Super,row,1);
+    row++;
     layout->addWidget(title_fps,row,0);
     layout->addWidget(print_fps,row,1);
+    row++;
+
 
 
     return(groupBox);
 
 }
+
 
 
 void ex6::computeVisibility()
@@ -1010,4 +1032,33 @@ bool ex6::LoadModel(QString filename, int i)
   }
 
   return false;
+}
+
+
+
+
+void ex6::setNotSuper()
+{
+    if(vs!=NULL)
+    {
+        vs->superActivate = false;
+        if(museumIsInitialized)
+        {
+            vs->computeVisibility(world, 100);
+            visibilityIsComputed = true;
+        }
+    }
+}
+
+void ex6::setSuper()
+{
+    if(vs!=NULL)
+    {
+        vs->superActivate = true;
+        if(museumIsInitialized)
+        {
+            vs->computeVisibility(world, 100);
+            visibilityIsComputed = true;
+        }
+    }
 }

@@ -27,6 +27,10 @@ private:
 
 
 public:
+
+    bool superActivate = false;
+
+
     visibility();
     void computeVisibility(std::vector<std::vector<int>> inMatrix, int rayNum);
     std::vector<int> getVisibilityOfCell(int i, int j);

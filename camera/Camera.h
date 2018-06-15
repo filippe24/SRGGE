@@ -320,7 +320,7 @@ class Camera {
 
   double camera_y;
 
-  bool museumOn = false;
+  bool museumOn;
 
   void activateMuseumCamera();
   std::vector<float> getCameraPosition();

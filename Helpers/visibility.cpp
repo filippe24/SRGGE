@@ -1,5 +1,10 @@
 #include "visibility.h"
 
+
+
+//this class perform ray casting and fill the visibility matrix
+
+
 visibility::visibility()
 {
 
@@ -7,6 +12,7 @@ visibility::visibility()
 }
 
 
+//main public function to compute visibiliry
 void visibility::computeVisibility(std::vector<std::vector<int>> inMatrix, int rayNum)
 {
     worldMatrix.clear();
@@ -33,9 +39,8 @@ void visibility::computeVisibility(std::vector<std::vector<int>> inMatrix, int r
 
     }
 
-    //select two walls --> select two different random number
+    //select randomly two walls --> select two different random number
     // 0 = (0,0)->(xMax,0) , 1 = (0,yMax)->(xMax,yMax), 2 = (0,0)->(0,yMax), 3 = (xMax,0)->(xMax,yMax)
-
     std::vector<int> w(2);
     std::vector<int> x(2);
     std::vector<int> y(2);
@@ -76,8 +81,15 @@ void visibility::computeVisibility(std::vector<std::vector<int>> inMatrix, int r
 
         }
 
-//        rayCasting(x[0],y[0],x[1],y[1]);
-        superRayCasting(x[0],y[0],x[1],y[1]);
+
+
+       if(superActivate)
+           superRayCasting(x[0],y[0],x[1],y[1]);
+       else
+        rayCasting(x[0],y[0],x[1],y[1]);
+
+
+// TESTING CODE FOR VERTICAL/HORIZONTAL RAY CASTING
 
 //        x.clear();
 //        y.clear();
@@ -104,6 +116,8 @@ void visibility::computeVisibility(std::vector<std::vector<int>> inMatrix, int r
 }
 
 
+
+// ADD POINT FUNCTION FOR SUPER BERSHNAM
 void visibility::addPoint(int x, int y)
 {
     std::cout << "          addPoint: casted point ("<<x<<", "<<y<<")" << std::endl;
@@ -149,6 +163,7 @@ void visibility::addPoint(int x, int y)
 
 }
 
+//SUPERCOVER BERSHNAM
 void visibility::superRayCasting(int x1, int y1, int x2, int y2)
 {
     int i;
@@ -244,16 +259,7 @@ void visibility::superRayCasting(int x1, int y1, int x2, int y2)
 
 
 
-
-
-
-
-
-
-
-
-
-
+//NORMAL RAY CASTING
 void visibility::rayCasting(int x_a, int y_a, int x_b, int y_b)
 {
     //slope
@@ -423,12 +429,12 @@ void visibility::rayCasting(int x_a, int y_a, int x_b, int y_b)
 
 void visibility::updateVisibility(std::vector<int> visible_set)
 {
-    std::cout << "updateVisibility: visibility matrix dimension x:" << visibilityMatrix.size() <<"  y:"<< visibilityMatrix[0].size() << "   and visible set size: " << visible_set.size() <<std::endl;
+//    std::cout << "updateVisibility: visibility matrix dimension x:" << visibilityMatrix.size() <<"  y:"<< visibilityMatrix[0].size() << "   and visible set size: " << visible_set.size() <<std::endl;
     for (uint i = 0; i < (visible_set.size() - 1) ; i = i+2)
     {
         int cel_x = visible_set[i];
         int cel_y = visible_set[i + 1];
-        std::cout << "updateVisibility: start updating visibility set of cell " << cel_x << " : " << cel_y << std::endl;
+//        std::cout << "updateVisibility: start updating visibility set of cell " << cel_x << " : " << cel_y << std::endl;
 
         for (uint j = 0; j < (visible_set.size() - 1) ; j = j+2)
             if(j!=i)
@@ -471,7 +477,7 @@ void visibility::updateVisibility(std::vector<int> visible_set)
 
 
             }
-    std::cout << "updateVisibility: updated visibility set of cell " << cel_x << " : " << cel_y << std::endl;
+//    std::cout << "updateVisibility: updated visibility set of cell " << cel_x << " : " << cel_y << std::endl;
     }
 
 

@@ -24,8 +24,6 @@ public:
     void		initVertexBuffer();		// init vertices
     QGroupBox*  controlPanel();
 
-
-    void generateMeshes();
     void computeLevels();
     void uploadNumTotalFaces();
     float computeCost(int i, int j);

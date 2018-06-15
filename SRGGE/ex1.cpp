@@ -76,12 +76,12 @@ void ex1::paintGL()
 
         float size=2*mesh_->max_[0];
 
-
+        //iteration in a grid to create different copies
         for(int i =0; i<copies; i++){
 
             for(int j=0; j<copies; j++){
 
-                //Translation
+                //Translation of each single copies
                 Eigen::Affine3f t(Eigen::Translation3f(Eigen::Vector3f((-copies/2*size)+2*size*float(i),0,(-copies/2*size)+2*size*float(j))));
                 Eigen::Matrix4f m = t.matrix();
                 model = model * m;
@@ -131,7 +131,6 @@ void ex1::paintGL()
 
 
     //Set Framerate
-
     frames++;
     final_time=time(NULL);
     if(final_time-initial_time>0)
